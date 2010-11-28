@@ -135,6 +135,9 @@ Miscelaneous
  ftp://medical.nema.org/medical/dicom/2009/09_06pu3.pdf
 - Special thanks to the hundreds of people that uploaded their DICOM files to the 
   php-DICOM test page. I have used that repository to test this new toolkit extensively.
+- DICOM sample files have been obtained from python package "pydicom" (thanks Darcy)
+  http://code.google.com/p/pydicom/
+  http://code.google.com/p/pydicom/source/browse/source/dicom/testfiles/README.txt
  
 Supported (Tested) Transfer Syntaxes
 ---------------------------
