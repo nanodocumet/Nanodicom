@@ -194,7 +194,7 @@ foreach ($files as $file)
 		echo $dicom->parse()->profiler_diff('parse')."\n";
 		// Setting values takes care of even length
 		// If set to '1.2.840.10008.1.2.1.99' it will use deflate
-		$dicom->value(0x0002, 0x0010, $dicom::EXPLICIT_VR_LITTLE_ENDIAN);
+		$dicom->value(0x0002, 0x0010, Nanodicom::EXPLICIT_VR_LITTLE_ENDIAN);
 		echo $dicom->write_file($filename.'.ex12')->profiler_diff('write')."\n";
 		unset($dicom);
 	}
@@ -238,7 +238,7 @@ foreach ($files as $file)
 		echo $dicom->parse()->profiler_diff('parse')."\n";
 		// Setting values takes care of even length
 		// If set to '1.2.840.10008.1.2.1.99' it will use deflate
-		$dicom->value(0x0002, 0x0010, $dicom::EXPLICIT_VR_LITTLE_ENDIAN);
+		$dicom->value(0x0002, 0x0010, Nanodicom::EXPLICIT_VR_LITTLE_ENDIAN);
 		file_put_contents($filename.'.ex15', $dicom->extend('anonymizer')->anonymize());
 		unset($dicom);
 	}
