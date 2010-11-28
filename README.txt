@@ -2,6 +2,10 @@ Version
 -------
 1.0 - Majestic Arequipa
 
+Download
+--------
+https://github.com/nanodocumet/Nanodicom
+
 Explanation
 -----------
 There seems to be only one available DICOM parser: php-dicom. However, after 
