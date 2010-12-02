@@ -8,7 +8,7 @@ https://github.com/nanodocumet/Nanodicom
 
 Explanation
 -----------
-There seems to be only one available DICOM parser: php-dicom. However, after 
+There seems to be only one available PHP DICOM parser: php-dicom. However, after 
 using it for a while (I took the lead on that project and added some new 
 features), I felt that it needed a big overhaul.
 The rationale for this new toolkit is to provide the following features:
@@ -141,7 +141,7 @@ Miscelaneous
  
 Supported (Tested) Transfer Syntaxes
 ---------------------------
-- For reading
+- For reading (actually, just for parsing, no pixel data is read)
   NONE
   1.2.840.10008.1.2		  Implicit VR Little Endian: Default Transfer Syntax for DICOM
   1.2.840.10008.1.2.1	  Explicit VR Little Endian
