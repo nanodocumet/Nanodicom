@@ -105,9 +105,6 @@ abstract class Nanodicom_Core {
 		'UT' => array('Unlimited Text', 4294967294, 0)
 	);
 	
-	// Array that holds which dictionaries have been loaded
-	protected static $_loaded_dictionaries = array();
-
 	/**
 	 * Create a new Nanodicom instance. It is usually called from a class extended 
 	 * from Nanodicom, ie Dumper
@@ -752,46 +749,6 @@ abstract class Nanodicom_Core {
 	}
 
 	/**
-	 * Loads the dictionary of the group into memory. Dictionaries are load by group
-	 * to allow easy extension for private groups but primarily for performance issues.
-	 * Many groups are rarely used, thus loading them wastes resources.
-	 *
-	 * @param	integer	 the group of the dictionary to load
-	 * @param	mixed	 the vr_mode or to force to load the dictionary
-	 * @return	void	 other times
-	 */
-	protected function _load_dictionary($group, $force = FALSE)
-	{
-		// Only continue if we are forced to load the dictionary (when a string was passed to
-		// the $this->_vr_reading_list) or when is has been explicitly said so (setting second
-		// argument to TRUE)
-		// Thus, it returns right away if neither of those are set
-		if ( ! ($this->_force_load_dictionary OR $force)) return;
-
-		// Let's load dictionary if it was not loaded yet
-		if (! isset(self::$_loaded_dictionaries[$group])  
-			AND file_exists(NANODICOMROOT.DIRECTORY_SEPARATOR.'nanodicom'.DIRECTORY_SEPARATOR.'dict'.DIRECTORY_SEPARATOR.sprintf('0x%04X',$group).'.php'))
-		{
-			// Load the dictionary
-			require_once(NANODICOMROOT.DIRECTORY_SEPARATOR.'nanodicom'.DIRECTORY_SEPARATOR.'dict'.DIRECTORY_SEPARATOR.sprintf('0x%04X',$group).'.php');
-			
-			// Some dictionaries could be empty
-			if (isset(Nanodicom_Dictionary::$dict[$group]) AND count(Nanodicom_Dictionary::$dict[$group]) > 0)
-			{
-				// Load the corresponding lookup table for names
-				foreach (Nanodicom_Dictionary::$dict[$group] as $dict_element => $dict_data)
-				{
-					Nanodicom_Dictionary::$dict_by_name[strtolower($dict_data[2])] = array($group, $dict_element);
-					unset($dict_element, $dict_data);
-				}
-			}
-			
-			// Dictionary was loaded
-			self::$_loaded_dictionaries[$group] = TRUE;
-		}
-	}
-
-	/**
 	 * After every element loaded we check if we need to stop
 	 *
 	 * @param	integer	 the group
@@ -865,9 +822,6 @@ abstract class Nanodicom_Core {
 		
 		// Load the dictionary
 		require_once 'dictionary.php';
-		// Minimum set of groups loaded
-		self::$_loaded_dictionaries[0x0002] = TRUE;
-		self::$_loaded_dictionaries[0xFFFE] = TRUE;
 		
 		if ($check_dicom_only)
 		{
@@ -1040,7 +994,7 @@ abstract class Nanodicom_Core {
 		// TODO: Raise a warning when an odd length is found
 		
 		// Load dictionary (if necessary)
-		$this->_load_dictionary($group);
+		Nanodicom_Dictionary::load_dictionary($group, $this->_force_load_dictionary);
 
 		// Decode the vr
 		list($value_representation, $multiplicity, $name) = $this->_decode_vr($group, $element, $vr, $length);
