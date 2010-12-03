@@ -105,7 +105,7 @@ class Dicom_Dumper extends Nanodicom {
 		foreach ($dataset as $group => $elements)
 		{
 			// Load dictionaries (Forced loading)
-			$this->_load_dictionary($group, TRUE);
+			Nanodicom_Dictionary::load_dictionary($group, TRUE);
 			foreach ($elements as $element => $indexes)
 			{
 				foreach ($indexes as $values)
