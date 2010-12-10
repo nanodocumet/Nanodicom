@@ -1,6 +1,6 @@
 Version
 -------
-1.0 - Majestic Arequipa
+1.1 - Amazonic Bagua
 
 Download
 --------

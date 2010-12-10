@@ -1,18 +1,29 @@
 <?php
 /**
- * Nanodicom_Core class. All tools extend this class.
+ * nanodicom/core.php file
  *
  * @package    Nanodicom
  * @category   Base
- * @author     Nano Documet
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
  * @copyright  (c) 2010
- * @license    MIT-license http://www.opensource.org/licenses/mit-license.php
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
- 
+
+/**
+ * Nanodicom_Core class.
+ *
+ * @package    Nanodicom
+ * @category   Base
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
+ * @copyright  (c) 2010
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
+ */
 abstract class Nanodicom_Core {
 
 	// Release version and codename
-	const VERSION  = '1.0';
+	const VERSION  = '1.1';
 	const CODENAME = 'Majestic Arequipa';
 
 	const BIG_ENDIAN 				= 100;
@@ -114,7 +125,7 @@ abstract class Nanodicom_Core {
 	 * @param   mixed      file blob or location of the file
 	 * @param   string     name of the tool to load
 	 * @param   string     type of data passed
-	 * @return  new Class
+	 * @return  Dicom_tool A Tool
 	 */
 	public static function factory($location, $name = 'simple', $type = 'file')
 	{
@@ -210,6 +221,12 @@ abstract class Nanodicom_Core {
 		return (array_keys($keys) !== $keys);
 	}
 
+	// Define which function to read integers based on size of integer
+	protected static $_read_int  = '_read_int_32';
+	
+	// Define which function to write integers based on size of integer
+	protected static $_write_int = '_write_int_32';
+
 	// In case a string was given for vr list, we force to load dictionaries
 	protected $_force_load_dictionary = FALSE;
 	
@@ -264,6 +281,9 @@ abstract class Nanodicom_Core {
 	// Number of parsed elements
 	protected $_counted_elements = 0;
 	
+	// Callback to check if stop is needed
+	protected $_check_list_function = '_dummy';
+	
 	/**
 	 * Create a new Nanodicom instance. It is usually called from a class extended
 	 * from core, ie Dumper
@@ -276,6 +296,9 @@ abstract class Nanodicom_Core {
 	 */
 	public function __construct($location, $type, $name)
 	{
+		self::$_read_int = (PHP_INT_SIZE > 4) ? '_read_int_64' : '_read_int_32';
+		self::$_write_int = (PHP_INT_SIZE > 4) ? '_write_int_64' : '_write_int_32';
+		
 		if ($type == 'file')
 		{
 			$this->_location = $location;
@@ -369,8 +392,7 @@ abstract class Nanodicom_Core {
 	 * Performance is better when called directly
 	 *
 	 * @param   string  tag element name
-	 * @return  mixed	when the method if found in any children
-	 & @return	FALSE	in case the method does not exist
+	 * @return  mixed|false	when the method if found in any children or false in case the method does not exist
 	 */
 	public function __call($name, $args)
 	{
@@ -510,9 +532,7 @@ abstract class Nanodicom_Core {
 	 * @param   mixed    either the element or value to set of the tag
 	 * @param   mixed    either the value to set or the create 
 	 * @param	boolean	 flag to allow creation of tag or not
-	 * @return  FALSE	 tag was not found or not enough arguments
-	 * @return	mixed	 found value
-	 * @return	void
+	 * @return  mixed|false|void found value or false when tag was not found or not enough arguments or void when setting a value successfully
 	 */
 	public function value($group = NULL, $element = NULL, $new_value = NULL, $create = FALSE)
 	{
@@ -608,6 +628,8 @@ abstract class Nanodicom_Core {
 
 		// Setting the list of elements to look for
 		$this->set_vr_reading_list($vr_reading_list);
+		
+		$this->_check_list_function = (count($vr_reading_list) == 0)? '_dummy' : '_check_list';
 		
 		return $this->_parse();
 	}
@@ -710,6 +732,12 @@ abstract class Nanodicom_Core {
 		$this->_vr_reading_list = $list;
 	}
 	
+	protected function _dummy($arg1 = NULL, $arg2 = NULL, $arg2 = NULL, $arg3 = NULL, $arg4 = NULL, $arg5 = NULL)
+	{
+		return FALSE;
+	
+	}
+	
 	/**
 	 * Updates the group length value if exists
 	 *
@@ -761,6 +789,9 @@ abstract class Nanodicom_Core {
 		if (empty($this->_vr_reading_list))
 			return FALSE;
 			
+		// Load dictionary (if necessary)
+		Nanodicom_Dictionary::load_dictionary($group, $this->_force_load_dictionary);
+
 		if (self::_compare(sprintf('0x%04X',$group).'.'.sprintf('0x%04X',$element), $this->_vr_reading_list)
 			OR (isset(Nanodicom_Dictionary::$dict[$group][$element]) 
 				AND self::_compare(Nanodicom_Dictionary::$dict[$group][$element][2], $this->_vr_reading_list)))
@@ -799,7 +830,8 @@ abstract class Nanodicom_Core {
 			list($value_representation, $multiplicity, $name) = self::$default_dictionary;
 		
 			
-			$value_representation = ( ! self::_compare($vr, array('', 'UN')) AND self::_compare($vr, self::$vr_array)) 
+			//$value_representation = ( ! self::_compare($vr, array('', 'UN')) AND self::_compare($vr, self::$vr_array)) 
+			$value_representation = ( ! in_array($vr, array('', 'UN')) AND array_key_exists($vr, self::$vr_array)) 
 				// 2) If current VR is valid VR and not UN or empty, then set as current vr (Explicit mode)
 				? $vr
 				// 3) If length is undefined, most likely it is a sequence,
@@ -842,15 +874,13 @@ abstract class Nanodicom_Core {
 		if ($check_dicom_only) 
 			return $this->_is_dicom;
 
-		// Continue with the rest
+		// Continue with the restzs
 		if ( ! $this->_is_dicom) 
 		{
 			// Rewinding
 			$this->_rewind();
 			$this->_transfer_syntax = self::IMPLICIT_VR_LITTLE_ENDIAN;
 		}
-
-		$this->_counted_elements = 0;
 
 		// Read the file
         while ($this->_read())
@@ -876,8 +906,8 @@ abstract class Nanodicom_Core {
 					$this->_transfer_syntax = trim($new_element[2]['val']);
 				}
 			}
-			
-			if ($this->_check_list($new_element[0], $new_element[1]))
+
+			if ($this->{$this->_check_list_function}($new_element[0], $new_element[1]))
 			{
 				// All elements found. Done!
 				break;
@@ -916,11 +946,12 @@ abstract class Nanodicom_Core {
 	protected function _read_element()
 	{
 		// Setting some general values
-		$allow_undefined_length	= TRUE;
+		//$allow_undefined_length	= TRUE;
 		$is_binary				= FALSE;
 		$value					= '';
 		$vr						= '';
 		$items					= array();
+		$value_representation	= 'UN';
 		$offset					= $this->_tell();
 		
 		// Get the vr_mode and endian from the Transfer Syntax
@@ -929,12 +960,12 @@ abstract class Nanodicom_Core {
 								: self::decode_transfer_syntax(self::EXPLICIT_VR_LITTLE_ENDIAN);
 
 		// Reading the group and element value
-		$group   = $this->{NANODICOM_READ_INT}(2, $endian, 2);
-		$element = $this->{NANODICOM_READ_INT}(2, $endian, 2);
+		$group   = $this->{self::$_read_int}(2, $endian, 2);
+		$element = $this->{self::$_read_int}(2, $endian, 2);
 
-		$vr_mode = ($group == self::ITEMS_GROUP AND self::_compare($element, self::$items_elements))
-				 ? self::VR_MODE_IMPLICIT
-				 : $vr_mode;
+		//if ($group == self::ITEMS_GROUP AND self::_compare($element, self::$items_elements))
+		if ($group == self::ITEMS_GROUP AND in_array($element, self::$items_elements))
+			$vr_mode = self::VR_MODE_IMPLICIT;
 
 		// Some VRs accept Undefined Length (0xFFFFFFFF). If they don't they will be changed to FALSE accordingly.
 		// DICOM Standard 09. PS 3.6 - Section 7.1: "Data Elements"
@@ -944,7 +975,8 @@ abstract class Nanodicom_Core {
 			$vr = $this->_read(2);
 			
 			// Somehow the VR is not correct. Should we assume it is IMPLICIT?
-			if ( ! self::_compare($vr, self::$vr_array))
+			//if ( ! self::_compare($vr, self::$vr_array))
+			if ( ! array_key_exists($vr, self::$vr_array))
 			{
 				$this->_rewind(-2);
 				$vr 	 = '';
@@ -953,27 +985,30 @@ abstract class Nanodicom_Core {
 			else
 			{
 				// vr exists. This is VR_MODE_EXPLICIT for sure now
-				if ( self::_compare($vr, self::$vr_explicit_4bytes))
+				//if ( self::_compare($vr, self::$vr_explicit_4bytes))
+				if (in_array($vr, self::$vr_explicit_4bytes))
 				{
 					// VR is in list. Next 2 bytes should be 0000H
-					$bytes_0000 = $this->_read(2);
+					//$bytes_0000 = $this->_read(2);
+					$this->_forward(2);
 					
 					// Length is 32-bit unsigned integer
-					$length = $this->{NANODICOM_READ_INT}(4, $endian, 4);
-					
+					$length = $this->{self::$_read_int}(4, $endian, 4);
+					/*
 					if ($vr == 'UT')
 					{
 						// Do not allow undefined length on UT
 						$allow_undefined_length = FALSE;
 					}
+					*/
 				}
 				else
 				{
 					// Length is next. 16-bit unsigned integer
-					$length = $this->{NANODICOM_READ_INT}(2, $endian, 2);
+					$length = $this->{self::$_read_int}(2, $endian, 2);
 
 					// Explicit and not in list of (OB, OW, OF, SQ, UN, UT) should not allow undefined length
-					$allow_undefined_length = FALSE;
+					//$allow_undefined_length = FALSE;
 				}
 			}
 		}
@@ -982,22 +1017,18 @@ abstract class Nanodicom_Core {
 		if ($vr_mode == self::VR_MODE_IMPLICIT)
 		{
 			// It is implicit. Next values are length. No guessing
-			$length = $this->{NANODICOM_READ_INT}(4, $endian, 4);
+			$length = $this->{self::$_read_int}(4, $endian, 4);
 		}
 
+		/*
 		// Checking for Unexpected Undefined lengths
 		if ( ! $allow_undefined_length AND $length == self::UNDEFINED_LENGTH) {
 			throw new Nanodicom_Exception('Unexpected Undefined Length found at [:group][:element]',
 										  array(':group' => $group, ':element' => $element), 100);
 		}
-
-		// TODO: Raise a warning when an odd length is found
+		*/
 		
-		// Load dictionary (if necessary)
-		Nanodicom_Dictionary::load_dictionary($group, $this->_force_load_dictionary);
-
-		// Decode the vr
-		list($value_representation, $multiplicity, $name) = $this->_decode_vr($group, $element, $vr, $length);
+		// TODO: Raise a warning when an odd length is found
 		
 		// Fast forward if length is set and not Metadata Group
 		if ($length >= 0 AND $group != self::METADATA_GROUP)
@@ -1018,6 +1049,9 @@ abstract class Nanodicom_Core {
 					  'ds'	  => $items)
 				);
 		}
+
+		// Decode the vr
+		list($value_representation, $multiplicity, $name) = $this->_decode_vr($group, $element, $vr, $length);
 
 		// Read values
 		list($value, $value_representation, $is_binary, $items) = $this->_read_value($vr, $value_representation, $length, $vr_mode, $endian);
@@ -1094,10 +1128,10 @@ abstract class Nanodicom_Core {
 		{
 			// Decode numeric values: shorts, longs, floats.
 			case 'UL':
-				$value = $this->{NANODICOM_READ_INT}(4, $endian, $length);
+				$value = $this->{self::$_read_int}(4, $endian, $length);
 			break;
 			case 'SL':
-				$value = $this->{NANODICOM_READ_INT}(4, $endian, $length, self::SIGNED);
+				$value = $this->{self::$_read_int}(4, $endian, $length, self::SIGNED);
 			break;
 			case 'XS':
 			case 'SS':
@@ -1105,12 +1139,12 @@ abstract class Nanodicom_Core {
 				// TODO: Check for the right way to find out US or SS
 				if ($vr == 'US')
 				{
-					$value = $this->{NANODICOM_READ_INT}(2, $endian, $length);
+					$value = $this->{self::$_read_int}(2, $endian, $length);
 					$value_representation = 'US';
 				}
 				else
 				{
-					$value = $this->{NANODICOM_READ_INT}(2, $endian, $length, self::SIGNED);
+					$value = $this->{self::$_read_int}(2, $endian, $length, self::SIGNED);
 					$value_representation = 'SS';
 				}
 			break;
@@ -1188,7 +1222,8 @@ abstract class Nanodicom_Core {
 						// The length is fixed.
 						
 						// Let's check if parent was a binary VR
-						if (self::_compare($this->_parent_vr, array('OB', 'OW', 'OX')))
+						//if (self::_compare($this->_parent_vr, array('OB', 'OW', 'OX')))
+						if (in_array($this->_parent_vr, array('OB', 'OW', 'OX')))
 						{
 							// It is an Item from a binary Sequence. Just read the data
 							$value 	  = $this->_read($length);
@@ -1264,8 +1299,8 @@ abstract class Nanodicom_Core {
 								: self::decode_transfer_syntax($this->_transfer_syntax));
 		
 		// Add the group and element
-		$buffer .= $this->{NANODICOM_WRITE_INT}($group, 2, $endian, 2);
-		$buffer .= $this->{NANODICOM_WRITE_INT}($element, 2, $endian, 2);
+		$buffer .= $this->{self::$_write_int}($group, 2, $endian, 2);
+		$buffer .= $this->{self::$_write_int}($element, 2, $endian, 2);
 
 		// Get the vr_mode for rest
 		$vr_mode = ($group == self::ITEMS_GROUP AND self::_compare($element, self::$items_elements))
@@ -1295,23 +1330,23 @@ abstract class Nanodicom_Core {
 		}
 		
 		// Setting the length
-		$buffer .= $this->{NANODICOM_WRITE_INT}($data['len'], $bytes, $endian, $bytes);
+		$buffer .= $this->{self::$_write_int}($data['len'], $bytes, $endian, $bytes);
 		
 		// Setting the value
 		switch ($data['vr'])
 		{
 			// Decode numeric values: shorts, longs, floats.
 			case 'UL':
-				$buffer .= $this->{NANODICOM_WRITE_INT}($data['val'], 4, $endian, $data['len']);
+				$buffer .= $this->{self::$_write_int}($data['val'], 4, $endian, $data['len']);
 			break;
 			case 'US':
-				$buffer .= $this->{NANODICOM_WRITE_INT}($data['val'], 2, $endian, $data['len']);
+				$buffer .= $this->{self::$_write_int}($data['val'], 2, $endian, $data['len']);
 			break;
 			case 'SL':
-				$buffer .= $this->{NANODICOM_WRITE_INT}($data['val'], 4, $endian, $data['len'], self::SIGNED);
+				$buffer .= $this->{self::$_write_int}($data['val'], 4, $endian, $data['len'], self::SIGNED);
 			break;
 			case 'SS':
-				$buffer .= $this->{NANODICOM_WRITE_INT}($data['val'], 2, $endian, $data['len'], self::SIGNED);
+				$buffer .= $this->{self::$_write_int}($data['val'], 2, $endian, $data['len'], self::SIGNED);
 			break;
 			case 'FL':
 				$buffer .= $this->_write_float($data['val'], 4, $data['len']);
@@ -1427,7 +1462,7 @@ abstract class Nanodicom_Core {
 							}
 
 							// Update the length based on data just stored. Calculate length first
-							$length = $this->{NANODICOM_WRITE_INT}($new_length, $bytes, $endian, $bytes);
+							$length = $this->{self::$_write_int}($new_length, $bytes, $endian, $bytes);
 							// Replace length with new value. Sweet!
 							$buffer = substr($buffer, 0, -1 * $new_length - $bytes).$length.substr($buffer, -1 * $new_length);
 						}
@@ -1485,8 +1520,8 @@ abstract class Nanodicom_Core {
 	{
 		// In case the file said 0 for the length?
 		// TODO: Raise a warning
-		if ($length === 0) 
-			return 0;
+		//if ($length === 0) 
+		//	return 0;
 		
 		// Get the right format
 		$format = ($sign == self::SIGNED)
@@ -1495,10 +1530,10 @@ abstract class Nanodicom_Core {
 
 		// TODO: Check for buffer size (avoid overflow)
 		$buffer = $this->_read($length);
-		$format = $format.($length / $bytes).'val';
+		$format = $format.($length/$bytes).'val';
 		$values = unpack($format, $buffer);
 
-		unset ($format, $buffer);
+		//unset ($format, $buffer);
 
 		// Return either a value or an array
 		return ($length == $bytes) ? $values['val'] : $values;
@@ -1580,7 +1615,7 @@ abstract class Nanodicom_Core {
 		$format = $format.($length / $bytes).'val';
 		$values = unpack($format, $buffer);
 
-		unset ($format, $buffer);
+		//unset ($format, $buffer);
 		return ($length == $bytes) ? $values['val'] : $values;
 	}
 
@@ -1722,8 +1757,7 @@ abstract class Nanodicom_Core {
 	 * left to be read
 	 *
 	 * @param	integer	 number of bytes to read or NULL
-	 * @return 	boolean	 when checking if there is still data
-	 * @return	string	 binary string otherwise
+	 * @return 	boolean|string boolean when checking if there is still data or a binary string otherwise
 	 * @throws  Nanodicom_Exception
 	 */
 	protected function _read($length = NULL)
@@ -1736,14 +1770,15 @@ abstract class Nanodicom_Core {
 
 		// Inflating a deflated DICOM Data Set
 		if ($this->_meta_information_group_length !== NULL AND $this->_current_pointer == $this->_meta_group_last_byte
-			AND self::_compare($this->_transfer_syntax, self::$encapsulated_transfer_syntaxes))
+			//AND self::_compare($this->_transfer_syntax, self::$encapsulated_transfer_syntaxes))
+			AND in_array($this->_transfer_syntax, self::$encapsulated_transfer_syntaxes))
 		{
 			$this->_original_blob = $this->_blob;
 			$uncompressed 		  = gzinflate(substr($this->_blob, $this->_current_pointer, $this->_file_length - $this->_current_pointer));
 			$this->_file_length   = $this->_current_pointer + strlen($uncompressed);
 			$this->_blob		  = substr($this->_blob, 0, $this->_current_pointer).$uncompressed;
 		}
-
+		
 		$starting_byte = $this->_current_pointer;
 		// Increase the reading pointer
 		$this->_current_pointer += $length;

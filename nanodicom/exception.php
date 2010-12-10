@@ -1,15 +1,27 @@
 <?php
 /**
- * Nanodicom_Extension class. Own class for exception. Many lines of code
- * taken from the Kohana framework http://www.kohanaframework.org
+ * nanodicom/exception.php file
  *
  * @package    Nanodicom
  * @category   Base
- * @author     Nano Documet
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
  * @copyright  (c) 2010
- * @license    MIT-license http://www.opensource.org/licenses/mit-license.php
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
+/**
+ * Nanodicom_Extension class.
+ *
+ * Own class for exception. Many lines of code taken from the {http://www.kohanaframework.org
+ * Kohana framework}
+ * @package    Nanodicom
+ * @category   Base
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
+ * @copyright  (c) 2010
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
+ */
 class Nanodicom_Exception extends Exception {
 
 	/**
@@ -33,9 +45,12 @@ class Nanodicom_Exception extends Exception {
 	}
 
 	/**
-	 * Magic object-to-string method. Get a single line of text representing the exception:
+	 * Magic object-to-string method.
+	 *
+	 * Get a single line of text representing the exception:
 	 *     echo $exception;
 	 * Error [ Code ]: Message
+	 *
 	 * @return  string
 	 */
 	public function __toString()

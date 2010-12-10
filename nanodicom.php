@@ -1,29 +1,30 @@
 <?php
 /**
- * Nanodicom class. Simple wrapper for Core class.
+ * nanodicom.php file
  *
  * @package    Nanodicom
  * @category   Base
- * @author     Nano Documet
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
  * @copyright  (c) 2010
- * @license    MIT-license http://www.opensource.org/licenses/mit-license.php
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
-
- if (PHP_INT_SIZE > 4)
-{
-	define('NANODICOM_READ_INT', '_read_int_64');
-	define('NANODICOM_WRITE_INT', '_write_int_64');
-}
-else
-{
-	define('NANODICOM_READ_INT', '_read_int_32');
-	define('NANODICOM_WRITE_INT', '_write_int_32');
-}
 
 // Set the full path to the current folder
 define('NANODICOMROOT', realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR);
 
+// Require the core class
 require_once NANODICOMROOT.'nanodicom'.DIRECTORY_SEPARATOR.'core.php';
 
-// Abstract class.
+/**
+ * abstract Nanodicom class.
+ *
+ * All tools extend this class. Simple wrapper for Core class.
+ * @package    Nanodicom
+ * @category   Base
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
+ * @copyright  (c) 2010
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
+ */
 abstract class Nanodicom extends Nanodicom_Core {}

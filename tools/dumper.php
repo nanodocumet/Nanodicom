@@ -1,14 +1,27 @@
 <?php
 /**
- * Dicom_Dumper class. Extends Nanodicom.
+ * tools/dumper.php file
  *
  * @package    Nanodicom
  * @category   Tools
- * @author     Nano Documet
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
  * @copyright  (c) 2010
- * @license    MIT-license http://www.opensource.org/licenses/mit-license.php
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
+/**
+ * Dicom_Dumper class.
+ *
+ * Extends Nanodicom. Dumps the dataset. Currently supports normal echo output and formatted
+ * html output. Fully extensible, ie. an xml output can be created as well.
+ * @package    Nanodicom
+ * @category   Tools
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
+ * @copyright  (c) 2010
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
+ */
 class Dicom_Dumper extends Nanodicom {
 
 	// Default html output

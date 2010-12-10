@@ -1,14 +1,24 @@
 <?php
 /**
- * Nanodicom_Dictionary class.
+ * nanodicom/dictionary.php file
  *
  * @package    Nanodicom
  * @category   Base
- * @author     Nano Documet
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
  * @copyright  (c) 2010
- * @license    MIT-license http://www.opensource.org/licenses/mit-license.php
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
+ /**
+ * Nanodicom_Dictionary class.
+ * @package    Nanodicom
+ * @category   Base
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
+ * @copyright  (c) 2010
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
+ */
 class Nanodicom_Dictionary
 {
 	public static $dict;

@@ -1,14 +1,26 @@
 <?php
 /**
- * Dicom_Anonymizer class. Extends Nanodicom.
+ * tools/anonymizer.php file
  *
  * @package    Nanodicom
  * @category   Tools
- * @author     Nano Documet
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
  * @copyright  (c) 2010
- * @license    MIT-license http://www.opensource.org/licenses/mit-license.php
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
+/**
+ * Dicom_Anonymizer class.
+ *
+ * Extends Nanodicom. It overwrites certain file tags. Fully extensible.
+ * @package    Nanodicom
+ * @category   Tools
+ * @author     Nano Documet <nanodocumet@gmail.com>
+ * @version	   1.1
+ * @copyright  (c) 2010
+ * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
+ */
 class Dicom_Anonymizer extends Nanodicom {
 
 	const RETURN_BLOB	= 0;
