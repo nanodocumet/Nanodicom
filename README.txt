@@ -124,6 +124,7 @@ Supported official extensions (tools)
 				to prompt or creating html output
 'anonymizer' => To anonymize DICOM files. It keeps track of repeated values
 				among files for consistency.
+				New v1.1!: Searches and replaces inside Sequences. Great for DICOMDIR
 
 Miscelaneous
 ------------

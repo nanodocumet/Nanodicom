@@ -27,15 +27,15 @@
 class Dicom_Anonymizer_Clinicaltrial extends Dicom_Anonymizer {
 
 	/**
-	 * Public method test.
+	 * Anonymizes the dataset
 	 *
-	 * Empty. Just to demo the extensibility.
-	 *
-	 * @return	void
+	 * @param	mixed	 NULL or an array to overwrite defaults
+	 * @param	integer	 the mode
+	 * @return	string	 the anonymized dataset
 	 */
-	public function test()
+	public function anonymize($tags = NULL, $mode = self::RETURN_BLOB)
 	{
-		// Nothing here.
+		//Overload the function here if you want
 	}
 	
 } // End Dicom_Anonymizer_Clinicaltrial

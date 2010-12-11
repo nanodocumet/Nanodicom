@@ -38,6 +38,9 @@ class Dicom_Anonymizer extends Nanodicom {
 	
 	// The mapped values
 	public static $map;
+
+	// The tags to use
+	protected $_tags;
 	
 	/**
 	 * Anonymizes the dataset
@@ -51,14 +54,12 @@ class Dicom_Anonymizer extends Nanodicom {
 		$tags = ($tags == NULL) ? self::$_basic : $tags;
 		$this->parse();
 		$this->profiler['anonymize']['start'] = microtime(TRUE);
+
+		// Set the tags
+		$this->_tags = $tags;
 		
-		// Update the tag elements to anonymized values
-		foreach ($tags as $entries)
-		{
-			list($group, $element, $replacement) = $entries;
-			$new_value = $this->_replace($group, $element, $replacement);
-			$this->value($group, $element, $new_value);
-		}
+		// Anonymize the top level dataset
+		$this->_anonymize($this->_dataset);
 		
 		// Return the new blob
 		switch ($mode)
@@ -75,6 +76,57 @@ class Dicom_Anonymizer extends Nanodicom {
 		$this->profiler['anonymize']['end'] = microtime(TRUE);
 		return $blob;
 	}
+	
+	/**
+	 * Anonymizes the dataset
+	 *
+	 * @param	array	 the dataset passed by reference
+	 * @return	string	 the anonymized dataset
+	 */
+	protected function _anonymize(&$dataset)
+	{
+		// Iterate groups
+		foreach ($dataset as $group => $elements)
+		{
+			// Iterate elements
+			foreach ($elements as $element => $indexes)
+			{
+				// Iterate indexes
+				foreach ($indexes as $index => $values)
+				{
+					if ( ! isset($values['done'])) 
+					{
+						// Read value if not read yet
+						$this->_read_value_from_blob($dataset[$group][$element][$index], $group, $element);
+					}
+					
+					// Update the tag elements to anonymized values
+					foreach ($this->_tags as $entries)
+					{
+						// Get the requested group, element and replacement values
+						list($entry_group, $entry_element, $replacement) = $entries;
+						
+						// Only try to replace if group and element match. This happens at any depth in the dataset
+						if ($entry_group == $group AND $entry_element == $element)
+						{
+							$new_value = $this->_replace($dataset, $entry_group, $entry_element, $replacement);
+							$this->dataset_value($dataset, $entry_group, $entry_element, $new_value);
+						}
+					}
+
+					if (count($values['ds']) > 0)
+					{
+						// Take care of items
+						$this->_anonymize($dataset[$group][$element][$index]['ds']);
+					}
+					
+				}
+				unset($values);
+			}
+			unset($element, $indexes);
+		}
+		unset($group, $elements);
+	}
 
 	/**
 	 * Replaces the values
@@ -84,10 +136,14 @@ class Dicom_Anonymizer extends Nanodicom {
 	 * @param	string	 the replacement regex
 	 * @return	string	 the new value
 	 */
-	protected function _replace($group, $element, $replacement)
+	protected function _replace($dataset, $group, $element, $replacement)
 	{
-		$value = $this->value($group, $element);
+		// Search the value in the current dataset
+		$value = $this->dataset_value($dataset, $group, $element);
 
+		// In case the value is not set
+		$value = (empty($value)) ? 'none' : $value;
+		
 		$name  = sprintf('0x%04X',$group).'.'.sprintf('0x%04X',$element);
 		if (isset(self::$map[$name][$value])) 
 			return self::$map[$name][$value];
