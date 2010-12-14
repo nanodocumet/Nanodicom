@@ -133,21 +133,21 @@ class Dicom_Dumper extends Nanodicom {
 						$this->_read_value_from_blob($elem, $group, $element);
 					}
 					
+					// Indent back when a delimiter was found. Must be done before dumping.
+					if ($group == Nanodicom::ITEMS_GROUP AND in_array($element, array(Nanodicom::ITEM_DELIMITER, Nanodicom::SEQUENCE_DELIMITER)))
+					{
+						$spacer = substr($spacer, 0, -1*strlen($this->output['spacer']));
+					}
+
 					// Start the dataset and dump the current element
 					$out .= $this->output['dataset_begin'].$this->_dump_element($elem, $spacer);
-					
+
 					if (count($elem['ds']) > 0)
 					{
 						// Take care of items
 						$out .= $this->_dump($elem['ds'], $spacer.$this->output['spacer']);
 					}
 					
-					// Indent back when a delimiter was found
-					if ($group == Nanodicom::ITEMS_GROUP AND in_array($element, array(Nanodicom::ITEM_DELIMITER, Nanodicom::SEQUENCE_DELIMITER)))
-					{
-						$spacer = substr($spacer, 0, strlen($this->output['spacer']));
-					}
-		
 					// Close the dataset
 					$out .= $this->output['dataset_end'];
 				}

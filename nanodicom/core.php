@@ -493,8 +493,9 @@ abstract class Nanodicom_Core {
 	}
 
 	/**
-	 * Public method to get and set values when passing a dataset
+	 * Public method to get and set values when passing a dataset.
 	 *
+	 * It supports retrieving a single element or a dataset for reading values
 	 * @param   array    a dataset
 	 * @param   mixed    either the group or name of the tag
 	 * @param   mixed    either the element or value to set of the tag
@@ -532,8 +533,8 @@ abstract class Nanodicom_Core {
 		
 		if ($new_value == NULL)
 		{
-			// TODO: Sequences & multiplicity values
-			// Reading value
+			// TODO: Multiplicity values
+			// Reading value. It supports returning datasets too
 			if (isset($dataset[$group][$element]))
 			{
 				if ( ! isset($dataset[$group][$element][0]['done']))
@@ -541,7 +542,9 @@ abstract class Nanodicom_Core {
 					// Read value from blob
 					$this->_read_value_from_blob($dataset[$group][$element][0], $group, $element);
 				}
-				return $dataset[$group][$element][0]['val'];
+				// It is a dataset, then return it, otherwise, just the value
+				return (count($dataset[$group][$element][0]['ds']) == 0) ? $dataset[$group][$element][0]['val'] 
+																		 : $dataset[$group][$element][0]['ds'];
 			}
 
 			return FALSE;
@@ -582,11 +585,11 @@ abstract class Nanodicom_Core {
 	}
 
 	/**
-	 * Parses the object
+	 * Parses the object.
+	 *
 	 * If the list of elements has a tag name, dictionaries will be loaded. For performance
 	 * is better to pass only arrays of the form:
 	 *   array(group, element)  where group and element are in hexadecimal
-	 *
 	 * @param   array    a list of elements tags to read. parsing stops when all found
 	 * @return	this
 	 */
@@ -1096,9 +1099,10 @@ abstract class Nanodicom_Core {
 		if ($endian == NULL)
 		{
 			// vr_mode is then transfer syntax. Get proper vr_mode and endian from the Transfer Syntax
-			list($vr_mode, $endian) = self::decode_transfer_syntax($vr_mode);
+			list($vr_mode, $endian) = self::decode_transfer_syntax($this->_transfer_syntax);
 		}
 
+		//echo 
 		// Read values accordingly to VR type (From dictionary);
 		switch ($value_representation)
 		{
@@ -1132,7 +1136,7 @@ abstract class Nanodicom_Core {
 			break;
 			case 'OX':
 				// Check for the right way to find out OB or OW
-				if ($vr_mode == self::VR_MODE_IMPLICIT OR $this->BitsAllocated > 8)
+				if ($vr_mode == self::VR_MODE_IMPLICIT OR $this->value(0x0028, 0x0100) > 8)
 				{
 					$value_representation = 'OW';
 				}
@@ -1160,7 +1164,9 @@ abstract class Nanodicom_Core {
 							// Read next element
 							$new_element = $this->_read_element();
 							$items[$new_element[0]][$new_element[1]][] = $new_element[2];
-							if ($new_element[2]['vr'] == 'DI') break;
+							// Check for Items Group or Delimeters
+							if ($new_element[0] == Nanodicom::ITEMS_GROUP 
+								AND in_array($new_element[1], array(Nanodicom::ITEM_DELIMITER, Nanodicom::SEQUENCE_DELIMITER)))  break;
 						}
 					break;
 					default:
@@ -1191,7 +1197,9 @@ abstract class Nanodicom_Core {
 
 							$new_element = $this->_read_element();
 							$items[$new_element[0]][$new_element[1]][] = $new_element[2];
-							if ($new_element[2]['vr'] == 'DI') break;
+							// Check for Items Group or Delimeters
+							if ($new_element[0] == Nanodicom::ITEMS_GROUP 
+								AND in_array($new_element[1], array(Nanodicom::ITEM_DELIMITER, Nanodicom::SEQUENCE_DELIMITER)))  break;
 						}
 					break;
 					default:
@@ -1242,7 +1250,9 @@ abstract class Nanodicom_Core {
 							// Read next element
 							$new_element = $this->_read_element();
 							$items[$new_element[0]][$new_element[1]][] = $new_element[2];
-							if ($new_element[2]['vr'] == 'DI') break;
+							// Check for Items Group or Delimeters
+							if ($new_element[0] == Nanodicom::ITEMS_GROUP 
+								AND in_array($new_element[1], array(Nanodicom::ITEM_DELIMITER, Nanodicom::SEQUENCE_DELIMITER)))  break;
 						}
 					break;
 					default:
@@ -1528,7 +1538,7 @@ abstract class Nanodicom_Core {
 	{
 		if ($value == -1)
 		{
-			return ($bytes == 2) ? chr(0xF).chr(0xF) : chr(0xF).chr(0xF).chr(0xF).chr(0xF);
+			return ($bytes == 2) ? chr(0xFF).chr(0xFF) : chr(0xFF).chr(0xFF).chr(0xFF).chr(0xFF);
 		}
 		
 		return $this->_write_int_32($value, $bytes, $endian, $length, $sign);
@@ -1759,8 +1769,9 @@ abstract class Nanodicom_Core {
 		
 		if ($this->_current_pointer > $this->_file_length) {
 			$missing_bytes = $this->_current_pointer - $this->_file_length;
-			throw new Nanodicom_Exception('End of file :file has been reached. File size is :filesize, failed to allocate :missing bytes'
-									  , array(':file' => $this->_location, ':filesize' => $this->_file_length, ':missing' => $missing_bytes), 3);
+			throw new Nanodicom_Exception('End of file :file has been reached. File size is :filesize, failed to allocate :missing bytes at byte :byte'
+									  , array(':file' => $this->_location, ':filesize' => $this->_file_length, 
+											  ':missing' => $missing_bytes, ':byte' => sprintf('0x%04X',$starting_byte)), 3);
 		}
 		
 		if ($this->_current_pointer < 0) {
