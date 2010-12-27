@@ -1,6 +1,7 @@
-Version
--------
-1.1 - Amazonic Bagua
+Latest Version
+--------------
+1.1 - Amazonic Bagua (Stable)
+1.2 - Imperial Cusco (Development)
 
 Download
 --------
@@ -125,6 +126,8 @@ Supported official extensions (tools)
 'anonymizer' => To anonymize DICOM files. It keeps track of repeated values
 				among files for consistency.
 				New v1.1!: Searches and replaces inside Sequences. Great for DICOMDIR
+'pixeler'	 => New v2.0!(beta): Reads pixel data from images and returns GD objects. 
+				Uncompressed images	only for now.
 
 Miscelaneous
 ------------
@@ -169,7 +172,7 @@ Supported (Tested) Transfer Syntaxes
 Roadmap
 -------
 Version 1.2
-1) Pixel data reader.
+1) Pixel data reader. (on going)
 2) CLI (Command Line Interface) Tools.
 3) Improve 'dumper' and 'anonymizer' for greater flexibility and completeness.
 4) Stabilize the API.
@@ -313,6 +316,32 @@ Examples
 	echo $dicom1->dump();
 	unset($dicom);
 	unset($dicom1);
+
+20) Gets the images from the dicom object if they exist. Requires GD at the server
+	$dicom  = Nanodicom::factory($filename, 'pixeler');
+	if ( ! file_exists($filename.'.0.jpg'))
+	{
+		
+		$images = $test->get_image();
+
+		if ($images !== FALSE)
+		{
+			foreach ($images as $index => $image)
+			{
+				imagejpeg($image, $img_dir.$file.'.'.$index.'.jpg');
+			}
+		}
+		else
+		{
+			echo "There are no DICOM images or transfer syntax not supported yet.\n";
+		}
+		$images = NULL;
+	}
+	else
+	{
+		echo "Image already exists\n";
+	}
+	unset($dicom);
 
 19) Proper way of handling exceptions
 	try

@@ -317,4 +317,37 @@ foreach ($files as $file)
 		echo 'File failed. '.$e->getMessage()."\n";
 	}
 
+	// 19) Gets the images from the dicom object if they exist. Requires GD at the server
+	try
+	{
+		echo "19) Gets the images from the dicom object if they exist. Requires GD at the server";
+		$dicom  = Nanodicom::factory($filename, 'pixeler');
+		if ( ! file_exists($filename.'.0.jpg'))
+		{
+			
+			$images = $test->get_image();
+
+			if ($images !== FALSE)
+			{
+				foreach ($images as $index => $image)
+				{
+					imagejpeg($image, $img_dir.$file.'.'.$index.'.jpg');
+				}
+			}
+			else
+			{
+				echo "There are no DICOM images or transfer syntax not supported yet.\n";
+			}
+			$images = NULL;
+		}
+		else
+		{
+			echo "Image already exists\n";
+		}
+		unset($dicom);
+	}
+	catch (Nanodicom_Exception $e)
+	{
+		echo 'File failed. '.$e->getMessage()."\n";
+	}
 }

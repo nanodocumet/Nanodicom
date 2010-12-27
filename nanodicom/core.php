@@ -1055,6 +1055,9 @@ abstract class Nanodicom_Core {
 	 */
 	protected function _read_value_from_blob( & $elem, $group, $element)
 	{
+		// Load dictionaries (Forced loading)
+		Nanodicom_Dictionary::load_dictionary($group, TRUE);
+
 		// Save current pointer
 		$current_pointer = $this->_tell();
 		
@@ -1470,12 +1473,13 @@ abstract class Nanodicom_Core {
 	 * @param	integer	 the endian mode: Little or Big Endian
 	 * @param	integer	 the number of bytes to read
 	 * @param	integer	 the sign
+	 * @param	string	 if present, a binary string, otherwise, read from file
 	 * @return	mixed	 a single value or an array
 	 */
-	protected function _read_int_64($bytes, $endian, $length, $sign = self::UNSIGNED)
+	protected function _read_int_64($bytes, $endian, $length, $sign = self::UNSIGNED, $data = NULL)
 	{
 		// Do actual reading at 32 bits
-		$values = $this->_read_int_32($bytes, $endian, $length, $sign);
+		$values = $this->_read_int_32($bytes, $endian, $length, $sign, $data);
 
 		if ( ! is_array($values))
 		{
@@ -1499,9 +1503,10 @@ abstract class Nanodicom_Core {
 	 * @param	integer	 the endian mode: Little or Big Endian
 	 * @param	integer	 the number of bytes to read
 	 * @param	integer	 the sign
+	 * @param	string	 if present, a binary string, otherwise, read from file
 	 * @return	mixed	 a single value or an array
 	 */
-	protected function _read_int_32($bytes, $endian, $length, $sign = self::UNSIGNED)
+	protected function _read_int_32($bytes, $endian, $length, $sign = self::UNSIGNED, $data = NULL)
 	{
 		// In case the file said 0 for the length?
 		// TODO: Raise a warning
@@ -1510,11 +1515,12 @@ abstract class Nanodicom_Core {
 		
 		// Get the right format
 		$format = ($sign == self::SIGNED)
-				? (($bytes == 2) ? 's' : 'l')
-				: (($bytes == 2) ? (($endian == self::BIG_ENDIAN) ? 'n' : 'v' ) : (($endian == self::BIG_ENDIAN) ? 'N' : 'V'));
+				? (($bytes == 2) ? 's' : (($bytes == 4) ? 'l' : 'c'))
+				: (($bytes == 2) ? (($endian == self::BIG_ENDIAN) ? 'n' : 'v' )
+								 : (($bytes == 4) ? (($endian == self::BIG_ENDIAN) ? 'N' : 'V') : 'C'));
 
 		// TODO: Check for buffer size (avoid overflow)
-		$buffer = $this->_read($length);
+		$buffer = ($data == NULL) ? $this->_read($length) : $data;
 		$format = $format.($length/$bytes).'val';
 		$values = unpack($format, $buffer);
 
