@@ -1,0 +1,8 @@
+Filename:          	test-SR.dcm
+Transfer Syntax:   	1.2.840.10008.1.2.1 - Parsed using: Explicit VR Little Endian
+DICOM file?        	Successfully parsed!
+Has DCM preamble?  	YES
+Has Metadata?      	YES
+Modality:          	SR
+Patient Name:      	Test^S R
+Images?            	NO

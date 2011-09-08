@@ -1,0 +1,23 @@
+Filename:          	ExplVR_BigEnd.dcm
+Transfer Syntax:   	1.2.840.10008.1.2.2 - Parsed using: Explicit VR Big Endian
+DICOM file?        	Successfully parsed!
+Has DCM preamble?  	YES
+Has Metadata?      	YES
+Modality:          	US
+Patient Name:      	Anonymized
+Images?            	YES
+Rows:              	60
+Cols:              	80
+Samples per pixel: 	3
+Bits Allocated:    	8
+Bits Stored:       	8
+High bit:          	7
+Dose scaling:      	N/A
+Window Width:      	N/A
+Window Center:     	N/A
+Rescale intercept: 	N/A
+Rescale slope:     	N/A
+Number of Frames:  	N/A
+Photometric Inter: 	RGB 
+Px Representation: 	0 - Unsigned Integer. Only positive values allowed.
+Planar Config:     	1 - Color-by-plane: RRR..., GGG..., BBB...

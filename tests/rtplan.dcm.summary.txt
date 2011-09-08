@@ -1,0 +1,8 @@
+Filename:          	rtplan.dcm
+Transfer Syntax:   	1.2.840.10008.1.2 - Parsed using: Implicit VR Little Endian: Default Transfer Syntax for DICOM
+DICOM file?        	Successfully parsed!
+Has DCM preamble?  	YES
+Has Metadata?      	YES
+Modality:          	RTPLAN
+Patient Name:      	Last^First^mid^pre
+Images?            	NO

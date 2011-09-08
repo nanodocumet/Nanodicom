@@ -1,0 +1,46 @@
+2011.09.08, Version 1.2 (stable)
+
+Core
+
+* #3 added support for partial reading of DICOM objects. Basically, parse does
+  not throw an error anymore. A public "status" variable is updated accordingly:
+  0 => Initial (Not parsed yet), 1 => Partial (Some tags were read),
+  2 => Success (Is it a DICOM file), 3 => Failure (Not a DICOM file). Dumping
+  or the object still can be performed, but only up to the number of tags found.
+  
+* #5 added support for AT vr reading and writing.
+
+* added a summary method that displays most important information about the object.
+
+* adedd "get" method that allows to pass a default value which will be returned
+  if no value is found.
+
+* "errors" and "warnings" are now saved in their corresponding public arrays.
+
+* method "is_dicom" now parses the full dicom object and returns true or false
+  based on status after being parsed.
+
+Framework
+
+* #4 added test suites.
+
+Anonymizer
+
+* added support to pass a list of replacement values. Great when replacements need
+  to be consistent over different number of runs.
+  
+Pixeler
+
+* added support for RLE compression, jpeg 8-bit lossy and uncompressed data.
+
+* added support to read Monochrome1 and Monochrome2 or Paletter color photometric
+  representations
+
+* added support to read Planar Configuration of 0 (Color-by-pixel RGBRGB...)
+  and 1 (Color-by-plane RRRR...GGGG...BBBB...)
+
+* added support for multiple drivers (libraries). Works with gd (default),
+  imagick (Image Magick) and gmagick (Gmagick). To change driver just call
+  ->set_driver('imagick') before doing ->get_images().
+
+* saving images handle jpg (default), png and gif.

@@ -1,0 +1,23 @@
+Filename:          	JPEG2000.dcm
+Transfer Syntax:   	1.2.840.10008.1.2.4.91 - Parsed using: JPEG 2000 Image Compression
+DICOM file?        	Successfully parsed!
+Has DCM preamble?  	YES
+Has Metadata?      	YES
+Modality:          	NM
+Patient Name:      	CompressedSamples^NM1 
+Images?            	YES
+Rows:              	1024
+Cols:              	256
+Samples per pixel: 	1
+Bits Allocated:    	16
+Bits Stored:       	16
+High bit:          	15
+Dose scaling:      	N/A
+Window Width:      	N/A
+Window Center:     	N/A
+Rescale intercept: 	N/A
+Rescale slope:     	N/A
+Number of Frames:  	1 
+Photometric Inter: 	MONOCHROME2 
+Px Representation: 	1 - 2's complement. Negative and positive allowed.
+Planar Config:     	N/A - Not available

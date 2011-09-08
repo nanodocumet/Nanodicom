@@ -1,0 +1,23 @@
+Filename:          	rtdose.dcm
+Transfer Syntax:   	1.2.840.10008.1.2 - Parsed using: Implicit VR Little Endian: Default Transfer Syntax for DICOM
+DICOM file?        	Successfully parsed!
+Has DCM preamble?  	YES
+Has Metadata?      	YES
+Modality:          	RTDOSE
+Patient Name:      	Lastname^Firstname
+Images?            	YES
+Rows:              	10
+Cols:              	10
+Samples per pixel: 	1
+Bits Allocated:    	32
+Bits Stored:       	32
+High bit:          	31
+Dose scaling:      	1.0000000e-6
+Window Width:      	N/A
+Window Center:     	N/A
+Rescale intercept: 	N/A
+Rescale slope:     	N/A
+Number of Frames:  	15
+Photometric Inter: 	MONOCHROME2 
+Px Representation: 	0 - Unsigned Integer. Only positive values allowed.
+Planar Config:     	N/A - Not available

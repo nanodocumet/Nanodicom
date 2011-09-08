@@ -1,0 +1,23 @@
+Filename:          	CT_small.dcm
+Transfer Syntax:   	1.2.840.10008.1.2.1 - Parsed using: Explicit VR Little Endian
+DICOM file?        	Successfully parsed!
+Has DCM preamble?  	YES
+Has Metadata?      	YES
+Modality:          	CT
+Patient Name:      	CompressedSamples^CT1 
+Images?            	YES
+Rows:              	128
+Cols:              	128
+Samples per pixel: 	1
+Bits Allocated:    	16
+Bits Stored:       	16
+High bit:          	15
+Dose scaling:      	N/A
+Window Width:      	N/A
+Window Center:     	N/A
+Rescale intercept: 	-1024 
+Rescale slope:     	1 
+Number of Frames:  	N/A
+Photometric Inter: 	MONOCHROME2 
+Px Representation: 	1 - 2's complement. Negative and positive allowed.
+Planar Config:     	N/A - Not available

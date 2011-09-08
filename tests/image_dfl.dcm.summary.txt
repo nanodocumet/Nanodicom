@@ -1,0 +1,23 @@
+Filename:          	image_dfl.dcm
+Transfer Syntax:   	1.2.840.10008.1.2.1.99 - Parsed using: Deflated Explicit VR Little Endian
+DICOM file?        	Successfully parsed!
+Has DCM preamble?  	YES
+Has Metadata?      	YES
+Modality:          	OT
+Patient Name:      	^^^^
+Images?            	YES
+Rows:              	512
+Cols:              	512
+Samples per pixel: 	1
+Bits Allocated:    	8
+Bits Stored:       	8
+High bit:          	7
+Dose scaling:      	N/A
+Window Width:      	N/A
+Window Center:     	N/A
+Rescale intercept: 	N/A
+Rescale slope:     	N/A
+Number of Frames:  	N/A
+Photometric Inter: 	MONOCHROME2 
+Px Representation: 	0 - Unsigned Integer. Only positive values allowed.
+Planar Config:     	N/A - Not available

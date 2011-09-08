@@ -1,0 +1,8 @@
+Filename:          	rtstruct.dcm
+Transfer Syntax:   	UN - Unknow [Parsed Using: 1.2.840.10008.1.2 - Implicit VR Little Endian: Default Transfer Syntax for DICOM]
+DICOM file?        	Successfully parsed!
+Has DCM preamble?  	NO
+Has Metadata?      	NO
+Modality:          	RTSTRUCT
+Patient Name:      	Test^Phantom30sep 
+Images?            	NO

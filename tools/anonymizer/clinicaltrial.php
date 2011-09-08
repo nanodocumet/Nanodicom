@@ -5,8 +5,8 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.1
- * @copyright  (c) 2010
+ * @version	   1.2
+ * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
@@ -19,8 +19,8 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.1
- * @copyright  (c) 2010
+ * @version	   1.2
+ * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 

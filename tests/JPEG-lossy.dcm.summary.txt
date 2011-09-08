@@ -1,0 +1,23 @@
+Filename:          	JPEG-lossy.dcm
+Transfer Syntax:   	1.2.840.10008.1.2.4.51 - Parsed using: JPEG Extended (Process 2 & 4): Default Transfer Syntax for Lossy JPEG 12 Bit Image Compression (Process 4 only)
+DICOM file?        	Successfully parsed!
+Has DCM preamble?  	YES
+Has Metadata?      	YES
+Modality:          	NM
+Patient Name:      	CompressedSamples^NM1 
+Images?            	YES
+Rows:              	1024
+Cols:              	256
+Samples per pixel: 	1
+Bits Allocated:    	16
+Bits Stored:       	12
+High bit:          	11
+Dose scaling:      	N/A
+Window Width:      	N/A
+Window Center:     	N/A
+Rescale intercept: 	N/A
+Rescale slope:     	N/A
+Number of Frames:  	1 
+Photometric Inter: 	MONOCHROME2 
+Px Representation: 	0 - Unsigned Integer. Only positive values allowed.
+Planar Config:     	N/A - Not available

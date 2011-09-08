@@ -1,7 +1,7 @@
 Latest Version
 --------------
 1.1 - Amazonic Bagua (Stable)
-1.2 - Imperial Cusco (Development)
+1.2 - Imperial Cusco (Stable)
 
 Download
 --------
@@ -25,7 +25,7 @@ The rationale for this new toolkit is to provide the following features:
   (multiplicity and conditional VR) almost 99% of tags are present. The new way
   to load dictionary allows for easy extensibility to include own private
   dictionaries.
-- Documentation. Great tools shoudl have great documentation. Users should solve
+- Documentation. Great tools should have great documentation. Users should solve
   most of their inquiries by reading documentation. More to come. For now, inline
   documentation is extensively provided.
 - Community-based. Using github to host the source code, hopefully others can
@@ -43,7 +43,7 @@ License
 -------
 The MIT License
 
-Copyright (c) 2010 Jorge "Nano" Documet
+Copyright (c) 2010-2011 Jorge "Nano" Documet
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -122,12 +122,18 @@ Supported official extensions (tools)
 -------------------------------------
 'simple'	 => Simple and dummy wrapper to Core. Nothing extra
 'dumper'	 => To dump the contents of a DICOM file. Very helpful for dumping
-				to prompt or creating html output
+				 to prompt or creating html output.
 'anonymizer' => To anonymize DICOM files. It keeps track of repeated values
 				among files for consistency.
 				New v1.1!: Searches and replaces inside Sequences. Great for DICOMDIR
-'pixeler'	 => New v2.0!(beta): Reads pixel data from images and returns GD objects. 
+				New v1.2!: Allows passing an array to replace values if found. Great
+				  when loading anonymized values from DB or other sources.
+'pixeler'	 => New v1.2!: Reads pixel data from images and returns image objects.
 				Uncompressed images	only for now.
+				New v1.2!: Reads RLE, jpeg 8-bit lossy and uncompressed data.
+				New v1.2!: Reads Monochrome1 and Monochrome2 or Paletter color.
+				New v1.2!: Reads Planar Configuration of 0 (Color-by-pixel RGBRGB...)
+				 and 1 (Color-by-plane RRRR...GGGG...BBBB...)
 
 Miscelaneous
 ------------
@@ -171,13 +177,11 @@ Supported (Tested) Transfer Syntaxes
 
 Roadmap
 -------
-Version 1.2
-1) Pixel data reader. (on going)
+Version 1.3
+1) Improve Pixeler performance
 2) CLI (Command Line Interface) Tools.
-3) Improve 'dumper' and 'anonymizer' for greater flexibility and completeness.
-4) Stabilize the API.
 Version 2.0
-5) DICOM Network tools (low priority)
+1) DICOM Network tools (low priority)
 
 Examples
 --------
@@ -317,18 +321,46 @@ Examples
 	unset($dicom);
 	unset($dicom1);
 
-20) Gets the images from the dicom object if they exist. Requires GD at the server
+19) Pass your own list of mappings to anonymizer. Patient Name should be replace to
+	'Mapped' if 'Anonymized' is found. Case sensitive
+
+	// Own tag elements for anonymizing
+	$tags = array(
+		array(0x0008, 0x0020, '{date|Ymd}'),			// Study Date
+		array(0x0008, 0x0021, '{date|Ymd}'),			// Series Date
+		array(0x0008, 0x0090, 'physician{random}'),		// Referring Physician
+		array(0x0010, 0x0010, 'patient{consecutive}'),  // Patient Name
+		array(0x0010, 0x0020, 'id{consecutive}'), 		// Patient ID
+		array(0x0010, 0x0030, '{date|Ymd}'), 			// Patient Date of Birth
+	);
+	$replacements = array(
+		array(0x0010, 0x0010, 'anonymized', 'Mapped'),
+	);
+	$dicom  = Nanodicom::factory($filename, 'anonymizer');
+	$dicom1 = Nanodicom::factory($dicom->anonymize($tags, $replacements), 'dumper', 'blob');
+	echo $dicom1->dump();
+	file_put_contents($filename.'.ex19', $dicom1->write());
+	unset($dicom);
+	unset($dicom1);
+
+	
+20) Gets the images from the dicom object if they exist. This example is for gd
 	$dicom  = Nanodicom::factory($filename, 'pixeler');
 	if ( ! file_exists($filename.'.0.jpg'))
 	{
-		
-		$images = $test->get_image();
+		$images = $dicom->get_images();
+		// If using another library, for example, imagemagick, the following should be done:
+		// $images = $dicom->set_driver('imagick')->get_images();
 
 		if ($images !== FALSE)
 		{
 			foreach ($images as $index => $image)
 			{
-				imagejpeg($image, $img_dir.$file.'.'.$index.'.jpg');
+				// Defaults to jpg
+				$test->write_image($image, $dir.$file.'.'.$index);
+				// To write another format, pass the format in second parameter.
+				// This will write a png image instead
+				// $test->write_image($image, $dir.$file.'.'.$index, 'png');
 			}
 		}
 		else
@@ -343,7 +375,12 @@ Examples
 	}
 	unset($dicom);
 
-19) Proper way of handling exceptions
+21) Prints summary report
+	$dicom  = Nanodicom::factory($filename);
+	echo $dicom->summary();
+	unset($dicom);
+
+22) Proper way of handling exceptions
 	try
 	{
 		// All other examples should be placed here
@@ -366,4 +403,4 @@ Additional notes
 2) Extended tools get a copy of the current Nanodicom object at the moment of extension. Whatever happens in the
    extended tool is not kept in sync with the main (initially loaded) tool. This could lead to unexpected 
    results. Thus, please treat the 'extend' feature still as experimental. Loading the right tool from the 
-   beginning (ie dumper or anonymizer) and performing any operations directly there should not be an issue.
+   beginning (ie dumper or anonymizer) and performing any operations directly there is recommended.

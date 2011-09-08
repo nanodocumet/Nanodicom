@@ -5,8 +5,8 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.1
- * @copyright  (c) 2010
+ * @version	   1.2
+ * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
@@ -18,8 +18,8 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.1
- * @copyright  (c) 2010
+ * @version	   1.2
+ * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 class Dicom_Dumper extends Nanodicom {
@@ -190,11 +190,25 @@ class Dicom_Dumper extends Nanodicom {
 									  ? Nanodicom_Dictionary::$dict[$element['g']][$element['e']][2] 
 									  : 'NA';
 				break;
-				case 'val'  : $string = ($element['bin']) 
-									  ? 'BINARY. Element starts at '.$element['off']
-									  : ((is_array($element['val'])) ? implode(',', $element['val']) 
-																	 : (isset(Nanodicom_Dictionary::$dict[$element['g']][$element['e']]) ? trim($element['val']) 
-																																		 : 'UNKNOWN'));
+				case 'val'  : 
+					if ($element['vr'] == 'AT')
+					{
+						// AT (Attribute Tags) look "nicer" being displayed in Hex to match Group, Elements format
+						$elements = array();
+						for($i = 0; $i < count($element['val']); $i++)
+						{
+							$elements[] = '['.sprintf("0x%04X", $element['val'][$i][0]).','.sprintf("0x%04X", $element['val'][$i][1]).']';
+						}
+						$element['val'] = $elements;
+					}
+
+					$string = ($element['bin']) 
+						? 'BINARY. Element starts at '.$element['off']
+						: ((is_array($element['val']))
+							? implode(',', $element['val'])
+							: (isset(Nanodicom_Dictionary::$dict[$element['g']][$element['e']])
+								? trim($element['val'])
+								: 'UNKNOWN'));
 				break;
 				default		: $string = trim($element[$column]);
 				break;

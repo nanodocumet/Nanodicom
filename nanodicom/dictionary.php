@@ -5,8 +5,8 @@
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.1
- * @copyright  (c) 2010
+ * @version	   1.2
+ * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
@@ -15,15 +15,53 @@
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.1
- * @copyright  (c) 2010
+ * @version	   1.2
+ * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 class Nanodicom_Dictionary
 {
 	public static $dict;
 	public static $dict_by_name;
-	
+
+	public static $transfer_syntaxes = array(
+        '1.2.840.10008.1.2' => array('Implicit VR Little Endian: Default Transfer Syntax for DICOM'),
+        '1.2.840.10008.1.2.1' => array('Explicit VR Little Endian'),
+        '1.2.840.10008.1.2.1.99' => array('Deflated Explicit VR Little Endian'),
+        '1.2.840.10008.1.2.2' => array('Explicit VR Big Endian'),
+        '1.2.840.10008.1.2.4.50' => array('JPEG Baseline (Process 1): Default Transfer Syntax for Lossy JPEG 8 Bit Image Compression'),
+        '1.2.840.10008.1.2.4.51' => array('JPEG Extended (Process 2 & 4): Default Transfer Syntax for Lossy JPEG 12 Bit Image Compression (Process 4 only)'),
+        '1.2.840.10008.1.2.4.52' => array('JPEG Extended (Process 3 & 5)'), // RET
+        '1.2.840.10008.1.2.4.53' => array('JPEG Spectral Selection, Non-Hierarchical (Process 6 & 8)'), // RET
+        '1.2.840.10008.1.2.4.54' => array('JPEG Spectral Selection, Non-Hierarchical (Process 7 & 9)'), // RET
+        '1.2.840.10008.1.2.4.55' => array('JPEG Full Progression, Non-Hierarchical (Process 10 & 12)'), // RET
+        '1.2.840.10008.1.2.4.56' => array('JPEG Full Progression, Non-Hierarchical (Process 11 & 13)'), // RET
+        '1.2.840.10008.1.2.4.57' => array('JPEG Lossless, Non-Hierarchical (Process 14)'),
+        '1.2.840.10008.1.2.4.58' => array('JPEG Lossless, Non-Hierarchical (Process 15)'), // RET
+        '1.2.840.10008.1.2.4.59' => array('JPEG Extended, Hierarchical (Process 16 & 18)'), // RET
+        '1.2.840.10008.1.2.4.60' => array('JPEG Extended, Hierarchical (Process 17 & 19)'), // RET
+        '1.2.840.10008.1.2.4.61' => array('JPEG Spectral Selection, Hierarchical (Process 20 & 22)'), // RET
+        '1.2.840.10008.1.2.4.62' => array('JPEG Spectral Selection, Hierarchical (Process 21 & 23)'), // RET
+        '1.2.840.10008.1.2.4.63' => array('JPEG Full Progression, Hierarchical (Process 24 & 26)'), // RET
+        '1.2.840.10008.1.2.4.64' => array('JPEG Full Progression, Hierarchical (Process 25 & 27)'), // RET
+        '1.2.840.10008.1.2.4.65' => array('JPEG Lossless, Hierarchical (Process 28)'), // RET
+        '1.2.840.10008.1.2.4.66' => array('JPEG Lossless, Hierarchical (Process 29)'), // RET
+        '1.2.840.10008.1.2.4.70' => array('JPEG Lossless, Non-Hierarchical, First-Order Prediction (Process 14 array(Selection Value 1)): Default Transfer Syntax for Lossless JPEG Image Compression'),
+        '1.2.840.10008.1.2.4.80' => array('JPEG-LS Lossless Image Compression'),
+        '1.2.840.10008.1.2.4.81' => array('JPEG-LS Lossy (Near-Lossless) Image Compression'),
+        '1.2.840.10008.1.2.4.90' => array('JPEG 2000 Image Compression (Lossless Only)'),
+        '1.2.840.10008.1.2.4.91' => array('JPEG 2000 Image Compression'),
+        '1.2.840.10008.1.2.4.92' => array('JPEG 2000 Part 2 Multi-component Image Compression (Lossless Only)'),
+        '1.2.840.10008.1.2.4.93' => array('JPEG 2000 Part 2 Multi-component Image Compression'),
+        '1.2.840.10008.1.2.4.94' => array('JPIP Referenced'),
+        '1.2.840.10008.1.2.4.95' => array('JPIP Referenced Deflate'),
+        '1.2.840.10008.1.2.4.100' => array('MPEG2 Main Profile @ Main Level'),
+        '1.2.840.10008.1.2.4.101' => array('MPEG2 Main Profile @ High Level'),
+        '1.2.840.10008.1.2.5' => array('RLE Lossless'),
+        '1.2.840.10008.1.2.6.1' => array('RFC 2557 MIME encapsulation'),
+        '1.2.840.10008.1.2.6.2' => array('XML Encoding'),
+	);
+
 	// Array that holds which dictionaries have been loaded
 	protected static $_loaded_dictionaries = array();
 

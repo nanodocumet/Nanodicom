@@ -5,8 +5,8 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.1
- * @copyright  (c) 2010
+ * @version	   1.2
+ * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
@@ -17,15 +17,13 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.1
- * @copyright  (c) 2010
+ * @version	   1.2
+ * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 class Dicom_Anonymizer extends Nanodicom {
 
-	const RETURN_BLOB	= 0;
-	//const CREATE_BACKUP	= 1;
-	//const UPDATE 		= 3;
+	const RETURN_BLOB	 = 0;
 
 	// Very basic tag elements to anonymize
 	protected static $_basic = array(
@@ -37,31 +35,62 @@ class Dicom_Anonymizer extends Nanodicom {
 	);
 	
 	// The mapped values
-	public static $map;
+	protected $_map;
 
 	// The tags to use
 	protected $_tags;
+
+	// The case sensitivity of the mapping
+	protected static $case = 'insensitive';
 	
 	/**
 	 * Anonymizes the dataset
 	 *
 	 * @param	mixed	 NULL or an array to overwrite defaults
 	 * @param	integer	 the mode
+	 * @param	array    a set of values to be used for mapping
+	 *  Each entry has 4 values:
+	 *  group = group of tag element
+	 *  element = element of the tag element
+	 *  value = the expect value to be matched (trimmed)
+	 *  assignment = the new replacement value for the given tag element and found value combined
 	 * @return	string	 the anonymized dataset
 	 */
-	public function anonymize($tags = NULL, $mode = self::RETURN_BLOB)
+	public function anonymize($tags = NULL, $map = NULL, $mode = self::RETURN_BLOB)
 	{
 		$tags = ($tags == NULL) ? self::$_basic : $tags;
 		$this->parse();
 		$this->profiler['anonymize']['start'] = microtime(TRUE);
 
 		// Set the tags
-		$this->_tags = $tags;
+		foreach ($tags as $entry)
+		{
+			list($group, $element, $replacement) = $entry;
+			$this->_tags[$group][$element] = $replacement;
+		}
+
+		if ($map !== NULL)
+		{
+			// Values were passed to be mapped
+			foreach ($map as $entry)
+			{
+				// Each entry has 4 values:
+				// group = group of tag element
+				// element = element of the tag element
+				// value = the expect value to be matched (trimmed)
+				// assignment = the new replacement value for the given tag element and found value combined
+				list ($group, $element, $value, $assignment) = $entry;
+				$value = (self::$case == 'insensitive') ? strtolower($value) : $value;
+				$name  = sprintf('0x%04X',$group).'.'.sprintf('0x%04X',$element);
+				$this->_map[$name][$value] = $assignment;
+			}
+		}
 		
 		// Anonymize the top level dataset
 		$this->_anonymize($this->_dataset);
 		
 		// Return the new blob
+		// TODO: allow more modes. Maybe replace, backup?
 		switch ($mode)
 		{
 			case self::RETURN_BLOB:
@@ -100,19 +129,8 @@ class Dicom_Anonymizer extends Nanodicom {
 						$this->_read_value_from_blob($dataset[$group][$element][$index], $group, $element);
 					}
 					
-					// Update the tag elements to anonymized values
-					foreach ($this->_tags as $entries)
-					{
-						// Get the requested group, element and replacement values
-						list($entry_group, $entry_element, $replacement) = $entries;
-						
-						// Only try to replace if group and element match. This happens at any depth in the dataset
-						if ($entry_group == $group AND $entry_element == $element)
-						{
-							$new_value = $this->_replace($dataset, $entry_group, $entry_element, $replacement);
-							$this->dataset_value($dataset, $entry_group, $entry_element, $new_value);
-						}
-					}
+					// Update the tag element to anonymized values (if conditions are met)
+					$this->_replace($dataset, $group, $element);
 
 					if (count($values['ds']) > 0)
 					{
@@ -131,23 +149,42 @@ class Dicom_Anonymizer extends Nanodicom {
 	/**
 	 * Replaces the values
 	 *
+	 * @param	array	 the dataset
 	 * @param	integer	 the group
 	 * @param	integer	 the element
-	 * @param	string	 the replacement regex
-	 * @return	string	 the new value
+	 * @return	boolean	 true if replacement was made, false otherwise
 	 */
-	protected function _replace($dataset, $group, $element, $replacement)
+	protected function _replace( & $dataset, $group, $element)
 	{
 		// Search the value in the current dataset
-		$value = $this->dataset_value($dataset, $group, $element);
+		$original_value = $this->dataset_value($dataset, $group, $element);
 
+		// Do not update arrays
+		if (is_array($original_value))
+			return FALSE;
+			
 		// In case the value is not set
-		$value = (empty($value)) ? 'none' : $value;
+		$value = (empty($original_value)) ? 'none' : trim($original_value);
+		
+		// Check if we are doing a case insensitive comparison
+		$value = (self::$case == 'insensitive') ? strtolower($value) : $value;
 		
 		$name  = sprintf('0x%04X',$group).'.'.sprintf('0x%04X',$element);
-		if (isset(self::$map[$name][$value])) 
-			return self::$map[$name][$value];
 
+		// A mapping was found. Return it
+		if (isset($this->_map[$name][$value]))
+		{
+			$this->dataset_value($dataset, $group, $element, $this->_map[$name][$value]);
+			return TRUE;
+		}
+
+		// If no tag is found, return false. Do not update dataset
+		if ( ! isset($this->_tags[$group][$element]))
+			return FALSE;
+		
+		// Get the replacement expression
+		$replacement = $this->_tags[$group][$element];
+		
 		// Search for regex expressions
 		if (preg_match('/{([a-z0-9]+)(\|([a-z0-9]+))?}$/i', $replacement, $matches))
 		{
@@ -155,12 +192,12 @@ class Dicom_Anonymizer extends Nanodicom {
 			{
 				// Set to date
 				case 'date':
-					self::$map[$name][$value] = str_replace('{date|'.$matches[3].'}', date($matches[3]), $replacement);
+					$this->_map[$name][$value] = str_replace('{date|'.$matches[3].'}', date($matches[3]), $replacement);
 				break;
 				// Consecutive
 				case 'consecutive':
-					$count = (isset(self::$map[$name])) ? count(self::$map[$name]) : 0;
-					self::$map[$name][$value] = str_replace('{consecutive}', $count, $replacement);
+					$count = (isset($this->_map[$name])) ? count($this->_map[$name]) : 0;
+					$this->_map[$name][$value] = str_replace('{consecutive}', $count, $replacement);
 				break;
 				// Random, do not store it
 				case 'random':
@@ -170,9 +207,13 @@ class Dicom_Anonymizer extends Nanodicom {
 		}
 		else
 		{
-			self::$map[$name][$value] = $replacement;
+			$this->_map[$name][$value] = $replacement;
 		}
-		return self::$map[$name][$value];
+		
+		// Update the dataset
+		$this->dataset_value($dataset, $group, $element, $this->_map[$name][$value]);
+		// Return true
+		return TRUE;
 	}
 	
 } // End Dicom_Anonymizer
