@@ -392,7 +392,19 @@ Examples
 		echo 'File failed. '.$e->getMessage()."\n";
 	}
 
-And more to come...
+Tests
+---------------
+Basic tests have been added. They are run using phpunit (you need to have phpunit installed)
+To run (at the base directory of nanodicom)
+$ phpunit NanodicomCoreTest.php
+PHPUnit 3.4.5 by Sebastian Bergmann.
+
+............
+
+Time: 2 seconds, Memory: 7.00Mb
+
+OK (12 tests, 12 assertions)
+
 
 Additional notes
 ---------------
