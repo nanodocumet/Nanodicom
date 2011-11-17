@@ -1,3 +1,30 @@
+2011.11.17 Version 1.3 (stable)
+
+Core
+
+* #6 Fixed a bug that throws an exception when the file is smaller than 132 bytes
+  and not a DICOM file. Now the error is set in the errors array and a Nanodicom
+  object is returned.
+  
+* #8 Added support to return profiling data in different units. Default is ms. Only
+  seconds (s) and milliseconds (ms) supported.
+
+Getter (Tool)
+
+* #7 Added a new tool: Getter. Almost the same thing, but forces to load dictionaries
+  for convenience. Otherwise, traditional code will not load dictionaries 
+  (improves performance).
+
+nanodcm (Command line tool)
+
+* Nanodicom from the command line!
+  - Run it recursively or not.
+  - Specified the path to search.
+  - Specified the mask to use for the file pattern
+  - Display errors and warnings
+  - Do dumping of multiple files in a single run.
+  - Anonymize your files. Creates backups for you.
+
 2011.09.08, Version 1.2 (stable)
 
 Core

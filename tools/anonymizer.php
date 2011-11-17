@@ -5,7 +5,7 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.2
+ * @version	   1.3
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
@@ -17,7 +17,7 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.2
+ * @version	   1.3
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
@@ -47,13 +47,13 @@ class Dicom_Anonymizer extends Nanodicom {
 	 * Anonymizes the dataset
 	 *
 	 * @param	mixed	 NULL or an array to overwrite defaults
-	 * @param	integer	 the mode
-	 * @param	array    a set of values to be used for mapping
+	 * @param	array    a set of values to be used for mapping (higher preference than replacement)
 	 *  Each entry has 4 values:
 	 *  group = group of tag element
 	 *  element = element of the tag element
 	 *  value = the expect value to be matched (trimmed)
 	 *  assignment = the new replacement value for the given tag element and found value combined
+	 * @param	integer	 the mode
 	 * @return	string	 the anonymized dataset
 	 */
 	public function anonymize($tags = NULL, $map = NULL, $mode = self::RETURN_BLOB)

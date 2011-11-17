@@ -5,7 +5,7 @@
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.2
+ * @version	   1.3
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
@@ -16,15 +16,15 @@
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.2
+ * @version	   1.3
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 abstract class Nanodicom_Core {
 
 	// Release version and codename
-	const VERSION  = '1.2';
-	const CODENAME = 'Imperial Cuzco';
+	const VERSION  = '1.3';
+	const CODENAME = 'Ancient Cajamarca';
 
 	const BIG_ENDIAN 				= 100;
 	const LITTLE_ENDIAN 			= 101;
@@ -137,7 +137,10 @@ abstract class Nanodicom_Core {
 	public static function factory($location, $name = 'simple', $type = 'file')
 	{
 		// Load necessary files
-		require_once 'exception.php';
+		require_once NANODICOMCOREPATH.'exception.php';
+
+		// Load the dictionary
+		require_once NANODICOMCOREPATH.'dictionary.php';
 
 		// Get the parts from the name
 		$parts = explode('_', $name);
@@ -451,12 +454,14 @@ abstract class Nanodicom_Core {
 	 * @param   string  name of the method
 	 * @return  float 	the number of seconds used
 	 */
-	public function profiler_diff($name)
+	public function profiler_diff($name, $units = 'ms')
 	{
+		$diff = 0;
+		
 		// Get the profiling time is exists in current object
 		if (isset($this->profiler[$name]) AND isset($this->profiler[$name]['start']) AND isset($this->profiler[$name]['end']))
 		{
-			return $this->profiler[$name]['end'] - $this->profiler[$name]['start'];
+			$diff = $this->profiler[$name]['end'] - $this->profiler[$name]['start'];
 		}
 		else
 		{
@@ -465,13 +470,21 @@ abstract class Nanodicom_Core {
 			{
 				if (method_exists($child_class, $name) AND is_callable(array($child_class, $name), TRUE))
 				{
-					return $this->_children[$child_name]->profiler[$name]['end'] - $this->_children[$child_name]->profiler[$name]['start'];
+					$diff = $this->_children[$child_name]->profiler[$name]['end'] - $this->_children[$child_name]->profiler[$name]['start'];
 				}
 			}
 		}
 		
-		// Nothing found
-		return (float) 0;
+		switch ($units)
+		{
+			case 'ms':
+				return $diff*1000;
+				break;
+			default:
+				// This is for seconds
+				return $diff;
+				break;
+		}
 	}
 
 	/**
@@ -786,20 +799,28 @@ abstract class Nanodicom_Core {
 	 * If the list of elements has a tag name, dictionaries will be loaded. For performance
 	 * is better to pass only arrays of the form:
 	 *   array(group, element)  where group and element are numbers (hex or decimal equivalents or any other base).
-	 * @param   array    a list of elements tags to read. parsing stops when all found.
+	 * @param   mixed    array for a list of elements tags to read. parsing stops when all found. Or TRUE to force
+	 *                   load dictionaries when parsing. Default is FALSE to avoid reading dictionaries.
 	 * @param   boolean  a flag to test if dicom file has DCM header only.
 	 * @return	this
 	 */
-	public function parse($vr_reading_list = array(), $check_dicom_preamble = FALSE)
+	public function parse($vr_reading_list = FALSE, $check_dicom_preamble = FALSE)
 	{
 		// If file has been parsed, return right away
 		if ($this->_is_parsed) return $this;
 
-		// Setting the list of elements to look for
-		$this->set_vr_reading_list($vr_reading_list);
-		
-		// Setting the function to used after reading each element. Dummy improves performance
-		$this->_check_list_function = (count($vr_reading_list) == 0)? '_dummy' : '_check_list';
+		if (is_array($vr_reading_list))
+		{
+			// Setting the list of elements to look for
+			$this->set_vr_reading_list($vr_reading_list);
+
+			// Setting the function to used after reading each element. Dummy improves performance
+			$this->_check_list_function = (count($vr_reading_list) == 0)? '_dummy' : '_check_list';
+		}
+		elseif (is_bool($vr_reading_list))
+		{
+			$this->load_dictionaries($vr_reading_list);
+		}
 		
 		// Do the parse
 		return $this->_parse($check_dicom_preamble);
@@ -815,6 +836,19 @@ abstract class Nanodicom_Core {
 	public function write_file($filename)
 	{
 		file_put_contents($filename, $this->write());
+		return $this;
+	}
+	
+	/**
+	 * Force to load dictionaries when parsing when TRUE. Otherwise,
+	 * __get calls won't be able to return the right values.
+	 * Defaults to FALSE.
+	 *
+	 * @return	this
+	 */
+	public function load_dictionaries($value = FALSE)
+	{
+		$this->_force_load_dictionary = $value;
 		return $this;
 	}
 	
@@ -986,9 +1020,6 @@ abstract class Nanodicom_Core {
 		if (empty($this->_vr_reading_list))
 			return FALSE;
 			
-		// Load dictionary (if necessary)
-		Nanodicom_Dictionary::load_dictionary($group, $this->_force_load_dictionary);
-
 		if (in_array(sprintf('0x%04X',$group).'.'.sprintf('0x%04X',$element), $this->_vr_reading_list)
 			OR (isset(Nanodicom_Dictionary::$dict[$group][$element]) 
 				AND in_array(Nanodicom_Dictionary::$dict[$group][$element][2], $this->_vr_reading_list)))
@@ -1104,9 +1135,6 @@ abstract class Nanodicom_Core {
 		// Instantiate the status to Failure
 		$this->status = self::FAILURE;
 
-		// Load the dictionary
-		require_once 'dictionary.php';
-		
 		if ($check_preamble_only)
 		{
 			// Try reading only first 128 bytes + 4 of DICM
@@ -1134,9 +1162,28 @@ abstract class Nanodicom_Core {
 			}
 		}
 		
-		// Test for NEMA or DICOM file.  
-		$this->_preamble  = $this->_read(128);
-		$this->has_dicom_preamble  = ($this->_read(4) == 'DICM');
+		// Following 2 calls need to be wrapped in a try/catch to avoid throwing exceptions
+		try 
+		{
+			// Test for NEMA or DICOM file.  
+			$this->_preamble  = $this->_read(128);
+		}
+		catch (Nanodicom_Exception $e)
+		{
+			$this->errors[] = $e->getMessage();
+			return $this;
+		}
+
+		try 
+		{
+			// Test to see if has preamble
+			$this->has_dicom_preamble  = (bool) ($this->_read(4) == 'DICM');
+		}
+		catch (Nanodicom_Exception $e)
+		{
+			$this->errors[] = $e->getMessage();
+			return $this;
+		}
 
 		// If checking only for DICOM preamble. Return current object
 		if ($check_preamble_only) 
@@ -1198,6 +1245,9 @@ abstract class Nanodicom_Core {
 					}
 				}
 			}
+
+			// Load dictionary (if necessary)
+			Nanodicom_Dictionary::load_dictionary($new_element[0], $this->_force_load_dictionary);
 
 			if ($this->{$this->_check_list_function}($new_element[0], $new_element[1]))
 			{
@@ -2084,7 +2134,15 @@ abstract class Nanodicom_Core {
 					array(':length' => $length, ':file' => $this->_location, ':byte' => sprintf('0x%04X',$starting_byte)), 2);
 
 			// Read the specified number of bytes
-			$this->_blob = fread($file_handle, $length);
+			try
+			{
+				$this->_blob = fread($file_handle, $length);
+			}
+			catch (Exception $e)
+			{
+				throw new Nanodicom_Exception('Error occured. Reading :length from file :file at byte :byte got an error',
+					array(':length' => $length, ':file' => $this->_location, ':byte' => sprintf('0x%04X',$starting_byte)), 3);
+			}
 
 			// Close the file
 			fclose($file_handle);

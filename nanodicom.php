@@ -5,16 +5,17 @@
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.2
+ * @version	   1.3
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
 // Set the full path to the current folder
 define('NANODICOMROOT', realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR);
+define('NANODICOMCOREPATH', realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'nanodicom'.DIRECTORY_SEPARATOR);
 
 // Require the core class
-require_once NANODICOMROOT.'nanodicom'.DIRECTORY_SEPARATOR.'core.php';
+require_once NANODICOMCOREPATH.'core.php';
 
 /**
  * abstract Nanodicom class.
@@ -23,7 +24,7 @@ require_once NANODICOMROOT.'nanodicom'.DIRECTORY_SEPARATOR.'core.php';
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.2
+ * @version	   1.3
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
