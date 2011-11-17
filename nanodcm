@@ -14,7 +14,8 @@
  /**
  * The Command Line interface for Nanodicom.
  *
- * This cli script helps you run Nanodicom from the command line without the need to create php files
+ * This cli script helps you run Nanodicom from the command line without the need to create php files.
+ * WARNING: Tested in Linux only.
  *
  * Heavily inspired by Goyote's Kohana Installer
  * [https://github.com/goyote/kohana-installer]

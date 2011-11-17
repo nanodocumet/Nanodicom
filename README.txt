@@ -118,6 +118,8 @@ Steps to use the module
 require_once PATH_TO_NANODICOM.'nanodicom.php';
 3) Load files the following way:
 $dicom = Nanodicom::factory(LOCATION_OF_FILE);
+4) Or run the 'nanodcm' tool (tested in Linux only).
+You will need to change the mode of the tool to 0755. User `chmod 0755 nanodcm`
 
 Supported official extensions (tools)
 -------------------------------------
