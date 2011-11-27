@@ -363,10 +363,10 @@ foreach ($files as $file)
 				foreach ($images as $index => $image)
 				{
 					// Defaults to jpg
-					$test->write_image($image, $dir.$file.'.'.$index);
+					$dicom->write_image($image, $dir.$file.'.'.$index);
 					// To write another format, pass the format in second parameter.
 					// This will write a png image instead
-					// $test->write_image($image, $dir.$file.'.'.$index, 'png');
+					// $dicom->write_image($image, $dir.$file.'.'.$index, 'png');
 				}
 			}
 			else

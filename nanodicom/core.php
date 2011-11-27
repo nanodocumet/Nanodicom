@@ -5,7 +5,7 @@
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.3
+ * @version	   1.3.1
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
@@ -16,15 +16,15 @@
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.3
+ * @version	   1.3.1
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 abstract class Nanodicom_Core {
 
 	// Release version and codename
-	const VERSION  = '1.3';
-	const CODENAME = 'Ancient Cajamarca';
+	const VERSION  = '1.3.1';
+	const CODENAME = 'Sunny Chiclayo';
 
 	const BIG_ENDIAN 				= 100;
 	const LITTLE_ENDIAN 			= 101;
@@ -136,12 +136,6 @@ abstract class Nanodicom_Core {
 	 */
 	public static function factory($location, $name = 'simple', $type = 'file')
 	{
-		// Load necessary files
-		require_once NANODICOMCOREPATH.'exception.php';
-
-		// Load the dictionary
-		require_once NANODICOMCOREPATH.'dictionary.php';
-
 		// Get the parts from the name
 		$parts = explode('_', $name);
 		
@@ -283,6 +277,12 @@ abstract class Nanodicom_Core {
 	 */
 	public function __construct($location, $name, $type)
 	{
+		// Load necessary files
+		require_once NANODICOMCOREPATH.'exception.php';
+
+		// Load the dictionary
+		require_once NANODICOMCOREPATH.'dictionary.php';
+
 		self::$_read_int = (PHP_INT_SIZE > 4) ? '_read_int_64' : '_read_int_32';
 		self::$_write_int = (PHP_INT_SIZE > 4) ? '_write_int_64' : '_write_int_32';
 		
@@ -565,12 +565,12 @@ abstract class Nanodicom_Core {
 	 * @param   mixed    either the group or name of the tag
 	 * @param   mixed    either the element or value to set of the tag
 	 * @param   mixed    either the value to set or the create 
-	 * @param	boolean	 flag to allow creation of tag or not
+	 * @param   boolean  for creating/updating values. true for binary, false everything els
 	 * @return  mixed|false|void found value or false when tag was not found or not enough arguments or void when setting a value successfully
 	 */
-	public function value($group = NULL, $element = NULL, $new_value = NULL, $create = FALSE)
+	public function value($group = NULL, $element = NULL, $new_value = NULL, $binary = FALSE)
 	{
-		return $this->dataset_value($this->_dataset, $group, $element, $new_value, $create);
+		return $this->dataset_value($this->_dataset, $group, $element, $new_value, $binary);
 	}
 
 	/**
@@ -603,7 +603,8 @@ abstract class Nanodicom_Core {
 		$transfer_syntax = trim($this->get(0x0002, 0x0010, 'UN'));
 		$transfer_syntax .= ($transfer_syntax == 'UN' OR ! array_key_exists($transfer_syntax, Nanodicom_Dictionary::$transfer_syntaxes))
 			? ' - Unknow'
-			: ' - Parsed using: '.Nanodicom_Dictionary::$transfer_syntaxes[$this->_transfer_syntax][0];
+			: ' - Parsed using: '.Nanodicom_Dictionary::$transfer_syntaxes[$transfer_syntax][0];
+			//.'. Parsed using: '.Nanodicom_Dictionary::$transfer_syntaxes[$this->_transfer_syntax][0];
 		
 		if ($transfer_syntax == 'UN - Unknow')
 		{
@@ -709,10 +710,10 @@ abstract class Nanodicom_Core {
 	 * @param   mixed    either the group or name of the tag
 	 * @param   mixed    either the element or value to set of the tag
 	 * @param   mixed    either the value to set or the create 
-	 * @param	boolean	 flag to allow creation of tag or not
+	 * @param	boolean  used for update/create, true for binary, false for anything else
 	 * @return  mixed|false|void found value or false when tag was not found or not enough arguments or void when setting a value successfully
 	 */
-	public function dataset_value( & $dataset, $group = NULL, $element = NULL, $new_value = NULL, $create = FALSE)
+	public function dataset_value( & $dataset, $group = NULL, $element = NULL, $new_value = NULL, $binary = FALSE)
 	{
 		// No group set. Return FALSE
 		if ($group == NULL) return FALSE;
@@ -740,7 +741,7 @@ abstract class Nanodicom_Core {
 			// Continue with the rest
 		}
 		
-		if ($new_value == NULL)
+		if ($new_value === NULL)
 		{
 			// TODO: Multiplicity values
 			// Reading value. It supports returning datasets too
@@ -759,36 +760,59 @@ abstract class Nanodicom_Core {
 			return FALSE;
 		}
 		
-		// Setting a value
-		if (isset($dataset[$group][$element]))
+		// Rest of the code is for setting a value (creation or update)
+		
+		// Load the dictionary for this group
+		Nanodicom_Dictionary::load_dictionary($group, TRUE);
+
+		// Grab the vr
+		list($value_representation, $multiplicity, $name) = $this->_decode_vr($group, $element, '', 0);
+
+		//var_dump($value_representation, $group, $element, $new_value);
+		
+		if (self::$vr_array[$value_representation][2] == 0)
 		{
-			// Updating
+			// Finding right length
 			$new_value = (strlen($new_value) % 2 == 0) ? $new_value : $new_value.chr(0);
-			
-			// Set the Transfer Syntax UID if needed
-			if ($group == self::METADATA_GROUP AND $element == 0x0010)
-			{
-				$this->_transfer_syntax = trim($new_value);
-			}
-			// Update data
-			$dataset[$group][$element][0]['done'] = TRUE;
-			$dataset[$group][$element][0]['val']  = $new_value;
-			$dataset[$group][$element][0]['len']  = strlen($new_value);
-			
-			$this->_update_group_length($dataset, $group);
-			// TODO: Update the length of parent element (SQ or IT)
+			$length = sprintf('%u', strlen($new_value));
 		}
 		else
 		{
-			// Element does not exist.
-			// TODO: Allow creation of new elements
-			
-			// Return FALSE when not setting the creation flag
-			if ($create === FALSE) 
-				return FALSE;
-			
-			// Continue with the rest to create element
+			$length = self::$vr_array[$value_representation][1];
 		}
+		
+		// Set the Transfer Syntax UID if needed
+		if ($group == self::METADATA_GROUP AND $element == 0x0010)
+		{
+			$this->_transfer_syntax = trim($new_value);
+		}
+		
+		if (isset($dataset[$group][$element]))
+		{
+			// Update the element
+			$dataset[$group][$element][0]['done'] = TRUE;
+			$dataset[$group][$element][0]['val']  = $new_value;
+			$dataset[$group][$element][0]['len']  = $length;
+		}
+		else
+		{
+			// Create a new element
+			$value = array(
+				  'len'	  => $length,
+				  'val'	  => $new_value,
+				  'vr'	  => $value_representation,
+				  '_vr'	  => $value_representation,
+				  'bin'	  => $binary,
+				  'off'	  => 0, // We don't know the offset
+				  'ds'	  => array(),
+				  'done'  => TRUE,
+			);
+
+			$dataset[(int) $group][(int) $element][0] = $value;
+		}
+		
+		$this->_update_group_length($dataset, $group);
+		// TODO: Update the length of parent element (SQ or IT)
 		
 		unset($group, $element, $new_value);
 	}
@@ -864,8 +888,12 @@ abstract class Nanodicom_Core {
 	 */
 	public function write()
 	{
-		// Do the parse if not done
-		$this->parse();
+		if (sprintf('%u', strlen($this->_blob)) > 0)
+		{
+			// Do the parse if not done
+			// But only when the blob is larger than 0, otherwise is considered new file
+			$this->parse();
+		}
 		
 		// Profile this task
 		$this->profiler['write']['start'] = microtime(TRUE);
@@ -885,8 +913,10 @@ abstract class Nanodicom_Core {
 		}
 		
 		// Add the DICM.
-		$buffer .= 'DICM'; //pack("c4", 'D', 'I', 'C', 'M');
-		//.chr(0x44).chr(0x49).chr(0x43).chr(0x4D) : '';
+		$buffer .= 'DICM';
+		
+		// Sort the keys
+		ksort($this->_dataset);
 		
 		// Iterate through the current elements
 		foreach ($this->_dataset as $group => $elements)
@@ -1747,6 +1777,9 @@ abstract class Nanodicom_Core {
 						// treat value as data not data sets
 						$this->_parent_vr = $data['vr'];
 
+						// Sort the keys
+						ksort($data['ds']);
+		
 						// Iterate through the current elements
 						foreach ($data['ds'] as $ds_group => $ds_elements)
 						{	
@@ -1786,6 +1819,9 @@ abstract class Nanodicom_Core {
 						// To let the Item know that value should be treated as Datas Sets
 						$this->_parent_vr = $data['vr'];
 
+						// Sort the keys
+						ksort($data['ds']);
+
 						// Iterate through the current elements
 						foreach ($data['ds'] as $ds_group => $ds_elements)
 						{	
@@ -1816,8 +1852,11 @@ abstract class Nanodicom_Core {
 						else
 						{
 							// It is an Item from a Sequence. We should read the embedded Data Sets
-							
 							$new_length = 0;
+
+							// Sort the keys
+							ksort($data['ds']);
+
 							// Iterate through the current elements
 							foreach ($data['ds'] as $ds_group => $ds_elements)
 							{	

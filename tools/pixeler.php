@@ -5,7 +5,7 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.3
+ * @version	   1.3.1
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
@@ -23,7 +23,7 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.3
+ * @version	   1.3.1
  * @copyright  (c) 2010-2011
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
@@ -99,6 +99,104 @@ class Dicom_Pixeler extends Nanodicom {
 		return self::$driver;
 	}
 
+	/**
+	 * Public method to add a jpeg lossy 8 bits image
+	 * Still under development.
+	 *
+	 * @return string the name of the jpeg file
+	 */
+	public function add_lossy_jpeg8($filename)
+	{
+		$dataset = array();
+		
+		// Get the data blob
+		$blob = file_get_contents($filename);
+
+		// Create first item
+		$value = array(
+			  'len'	  => 0,
+			  'val'	  => '',
+			  'vr'	  => 'IT',
+			  '_vr'	  => 'IT',
+			  'bin'	  => FALSE,
+			  'off'	  => 0, // We don't know the offset
+			  'ds'	  => array(),
+			  'done'  => TRUE,
+		);
+
+		$dataset[0xFFFE][0xE000][] = $value;
+	
+		// Attach jpeg
+		$value = array(
+			  'len'	  => sprintf('%u', strlen($blob)),
+			  'val'	  => $blob,
+			  'vr'	  => 'IT',
+			  '_vr'	  => 'IT',
+			  'bin'	  => TRUE,
+			  'off'	  => 0, // We don't know the offset
+			  'ds'	  => array(),
+			  'done'  => TRUE,
+		);
+
+		$dataset[0xFFFE][0xE000][] = $value;
+		
+		// Pixel Data element
+		$value = array(
+			  'len'	  => -1,
+			  'val'	  => '',
+			  'vr'	  => 'OB',
+			  '_vr'	  => 'OB',
+			  'bin'	  => FALSE,
+			  'off'	  => 0, // We don't know the offset
+			  'ds'	  => $dataset,
+			  'done'  => TRUE,
+		);
+		
+		$this->_dataset[0x7FE0][0x0010][0] = $value;
+
+		// Delimeter
+		$value = array(
+			  'len'	  => 0,
+			  'val'	  => '',
+			  'vr'	  => 'DI',
+			  '_vr'	  => 'DI',
+			  'bin'	  => FALSE,
+			  'off'	  => 0, // We don't know the offset
+			  'ds'	  => array(),
+			  'done'  => TRUE,
+		);
+		
+		$this->_dataset[0xFFFE][0xE0DD][0] = $value;
+		
+		$info = getimagesize($filename);
+		
+		// Set the rows (height of image)
+		$this->value(0x0028, 0x0010, (int) $info[1]);
+
+		// Set the columns (width of image)
+		$this->value(0x0028, 0x0011, (int) $info[0]);
+
+		// Set the bits allocated
+		$this->value(0x0028, 0x0100, 8);
+
+		// Set the bits stored
+		$this->value(0x0028, 0x0101, 8);
+
+		// Set the high bit
+		$this->value(0x0028, 0x0102, 7);
+
+		// Set the samples per pixel
+		$this->value(0x0028, 0x0002, 1);
+
+		// Set the Photometric Interpretation
+		$this->value(0x0028, 0x0004, 'MONOCHROME2');
+
+		// TransferSyntaxUID. JPEG Lossy Baseline (1) - 8 bits
+		$dicom->value(0x0002, 0x0010, '1.2.840.10008.1.2.4.50');
+		
+		return $this;
+	}
+	
 	/**
 	 * Public method to get the images from the dicom object
 	 *
