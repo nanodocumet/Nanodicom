@@ -192,7 +192,7 @@ class Dicom_Pixeler extends Nanodicom {
 		$this->value(0x0028, 0x0004, 'MONOCHROME2');
 
 		// TransferSyntaxUID. JPEG Lossy Baseline (1) - 8 bits
-		$dicom->value(0x0002, 0x0010, '1.2.840.10008.1.2.4.50');
+		$this->value(0x0002, 0x0010, '1.2.840.10008.1.2.4.50');
 		
 		return $this;
 	}
