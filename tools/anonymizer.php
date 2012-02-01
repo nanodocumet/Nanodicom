@@ -192,16 +192,16 @@ class Dicom_Anonymizer extends Nanodicom {
 			{
 				// Set to date
 				case 'date':
-					$this->_map[$name][$value] = str_replace('{date|'.$matches[3].'}', date($matches[3]), $replacement);
+					$replacement = $this->_map[$name][$value] = str_replace('{date|'.$matches[3].'}', date($matches[3]), $replacement);
 				break;
 				// Consecutive
 				case 'consecutive':
 					$count = (isset($this->_map[$name])) ? count($this->_map[$name]) : 0;
-					$this->_map[$name][$value] = str_replace('{consecutive}', $count, $replacement);
+					$replacement = $this->_map[$name][$value] = str_replace('{consecutive}', $count, $replacement);
 				break;
 				// Random, do not store it
 				case 'random':
-					return str_replace('{random}', sprintf('%04d',rand()), $replacement);
+					$replacement = str_replace('{random}', sprintf('%04d',rand()), $replacement);
 				break;
 			}
 		}
@@ -211,7 +211,7 @@ class Dicom_Anonymizer extends Nanodicom {
 		}
 		
 		// Update the dataset
-		$this->dataset_value($dataset, $group, $element, $this->_map[$name][$value]);
+		$this->dataset_value($dataset, $group, $element, $replacement);
 		// Return true
 		return TRUE;
 	}
