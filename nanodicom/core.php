@@ -703,6 +703,41 @@ abstract class Nanodicom_Core {
 	}
 
 	/**
+	 * Public method to get items from a sequence.
+	 *
+	 * Gets items from a sequence
+	 * @param   array    a dataset
+	 */
+	public function read_sequence_items( & $dataset)
+	{
+		$group = 0xFFFE;
+		$element = 0xE000;
+		
+		if (isset($dataset[$group][$element]))
+		{
+			$total = count($dataset[$group][$element]);
+			$results = array();
+
+			for ($i = 0; $i < $total; $i++)
+			{
+				if ( ! isset($dataset[$group][$element][$i]['done']))
+				{
+					// Read value from blob
+					$this->_read_value_from_blob($dataset[$group][$element][$i], $group, $element);
+				}
+
+				$results[] = $dataset[$group][$element][$i]['ds'];
+			}
+
+			return $results;
+		}
+
+		unset($group, $element);
+
+		return FALSE;
+	}
+
+	/**
 	 * Public method to get and set values when passing a dataset.
 	 *
 	 * It supports retrieving a single element or a dataset for reading values
