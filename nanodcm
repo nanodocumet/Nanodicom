@@ -61,7 +61,7 @@ class Nanodicom_CLI
 	{
 		$this->argv = $argv;
 		$this->parse_options();
-		$this->root_dir = trim(shell_exec('pwd'));
+		$this->root_dir = getcwd();
 	}
 
 	/**
