@@ -296,17 +296,19 @@ class Nanodicom_CLI
 		list($path, $mask, $recursive, $errors, $warnings, $debug) = $this->common_options();
 
 		// Overwrite?
-		$overwride = $this->get_option('overwrite', FALSE);
+		$overwride = (boolean) $this->get_option('overwrite', FALSE);
 
 		// Any tags?
 		$tags = $this->get_option('tags', NULL);
 
 		$tags = ($tags !== NULL) ? json_decode($tags) : $tags;
+		$tags = $this->convert_hex_strings_in_array($tags);
 
 		// Any mapping?
 		$map = $this->get_option('map', NULL);
 
 		$map = ($map !== NULL) ? json_decode($map) : $map;
+		$map = $this->convert_hex_strings_in_array($map);
 
 		// Get the list of files (with full path)
 		$files = $this->sdir($path, $mask, $recursive, TRUE);
@@ -461,6 +463,39 @@ class Nanodicom_CLI
 		}
 
 		return $sdir;
+	}
+
+	/**
+	 * Converts any group and element values from strings to integers
+	 *
+	 * @param  array $data
+	 * @return array
+	 */
+	protected function convert_hex_strings_in_array($data)
+	{
+		if ($data !== NULL AND count($data))
+		{
+			// Keep
+			$updated_data = array();
+
+			foreach ($data as $triplets)
+			{
+				// Get information
+				$group = isset($triplets[0]) ? $triplets[0] : NULL;
+				$group = (is_string($group)) ? hexdec($group) : $group;
+
+				$element = isset($triplets[1]) ? $triplets[1] : NULL;
+				$element = (is_string($element)) ? hexdec($element) : $element;
+
+				$info = isset($triplets[2]) ? $triplets[2] : NULL;
+
+				$updated_data[] = array($group, $element, $info);
+			}
+
+			$data = $updated_data;
+		}
+
+		return $data;
 	}
 
 	/**
