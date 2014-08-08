@@ -5,8 +5,8 @@
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.3.1
- * @copyright  (c) 2010-2011
+ * @version	   2.0.0
+ * @copyright  (c) 2010-2014
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
@@ -16,15 +16,15 @@
  * @package    Nanodicom
  * @category   Base
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.3.1
- * @copyright  (c) 2010-2011
+ * @version	   2.0.0
+ * @copyright  (c) 2010-2014
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 abstract class Nanodicom_Core {
 
 	// Release version and codename
-	const VERSION  = '1.3.1';
-	const CODENAME = 'Sunny Chiclayo';
+	const VERSION  = '2.0.0';
+	const CODENAME = 'Centric Huancayo';
 
 	const BIG_ENDIAN 				= 100;
 	const LITTLE_ENDIAN 			= 101;

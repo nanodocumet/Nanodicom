@@ -5,8 +5,8 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.3.1
- * @copyright  (c) 2010-2011
+ * @version	   2.0.0
+ * @copyright  (c) 2010-2014
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 
@@ -17,8 +17,8 @@
  * @package    Nanodicom
  * @category   Tools
  * @author     Nano Documet <nanodocumet@gmail.com>
- * @version	   1.3.1
- * @copyright  (c) 2010-2011
+ * @version	   2.0.0
+ * @copyright  (c) 2010-2014
  * @license    http://www.opensource.org/licenses/mit-license.php MIT-license
  */
 class Dicom_Anonymizer extends Nanodicom {
