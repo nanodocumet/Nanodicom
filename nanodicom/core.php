@@ -790,21 +790,36 @@ abstract class Nanodicom_Core {
 					// Read value from blob
 					$this->_read_value_from_blob($dataset[$group][$element][0], $group, $element);
 				}
+
 				// It is a dataset, then return it, otherwise, just the value
 				return (count($dataset[$group][$element][0]['ds']) == 0) ? $dataset[$group][$element][0]['val'] 
-																	 : $dataset[$group][$element][0]['ds'];
+																		 : $dataset[$group][$element][0]['ds'];
 			}
 
 			return FALSE;
 		}
 		
+		$original_vr = '';
+
 		// Rest of the code is for setting a value (creation or update)
-		
+		if (isset($dataset[$group][$element]))
+		{
+			// Update vr value
+			if ( ! isset($dataset[$group][$element][0]['done']))
+			{
+				// Read value from blob
+				$this->_read_value_from_blob($dataset[$group][$element][0], $group, $element);
+			}
+
+			// This is the vr read from file. Use it as a fallback
+			$original_vr = $dataset[$group][$element][0]['_vr'];
+		}
+
 		// Load the dictionary for this group
 		Nanodicom_Dictionary::load_dictionary($group, TRUE);
 
 		// Grab the vr
-		list($value_representation, $multiplicity, $name) = $this->_decode_vr($group, $element, '', 0);
+		list($value_representation, $multiplicity, $name) = $this->_decode_vr($group, $element, $original_vr, 0);
 
 		if (self::$vr_array[$value_representation][2] == 0)
 		{
@@ -829,6 +844,7 @@ abstract class Nanodicom_Core {
 			$dataset[$group][$element][0]['done'] = TRUE;
 			$dataset[$group][$element][0]['val']  = $new_value;
 			$dataset[$group][$element][0]['len']  = $length;
+			$dataset[$group][$element][0]['vr']   = $value_representation;
 		}
 		else
 		{
