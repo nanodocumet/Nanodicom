@@ -210,6 +210,10 @@ class Dicom_Dumper extends Nanodicom {
 								? trim($element['val'])
 								: 'UNKNOWN'));
 				break;
+				case 'vr' :
+					$vr_index = ($element['vr'] != $element['_vr'] AND ! empty($element['_vr'])) ? '_vr' : 'vr';
+					$string = trim($element[$vr_index]);
+				break;
 				default		: $string = trim($element[$column]);
 				break;
 			}
