@@ -191,7 +191,7 @@ abstract class Nanodicom_Core {
 	
 	// Array of DICOM elements indexed by group and element index. The dataset
 	protected $_dataset = array();
-
+	
 	// Flag indicating if file has DICOM preamble or not. TRUE => DICM, FALSE => Anything else (NEMA?)
 	public $has_dicom_preamble = FALSE;
 	
@@ -263,6 +263,9 @@ abstract class Nanodicom_Core {
 
 	// Callback to check proper endian
 	protected $_check_proper_endian_function = '_check_proper_endian';
+	
+	// Number of retries to read oversized lenghts
+	protected $_oversize_retries = 0;
 
 	/**
 	 * Create a new Nanodicom instance. It is usually called from a class extended
@@ -775,7 +778,7 @@ abstract class Nanodicom_Core {
 			
 			// Continue with the rest
 		}
-		
+
 		if ($new_value === NULL)
 		{
 			// TODO: Multiplicity values
@@ -789,7 +792,7 @@ abstract class Nanodicom_Core {
 				}
 				// It is a dataset, then return it, otherwise, just the value
 				return (count($dataset[$group][$element][0]['ds']) == 0) ? $dataset[$group][$element][0]['val'] 
-																		 : $dataset[$group][$element][0]['ds'];
+																	 : $dataset[$group][$element][0]['ds'];
 			}
 
 			return FALSE;
@@ -803,8 +806,6 @@ abstract class Nanodicom_Core {
 		// Grab the vr
 		list($value_representation, $multiplicity, $name) = $this->_decode_vr($group, $element, '', 0);
 
-		//var_dump($value_representation, $group, $element, $new_value);
-		
 		if (self::$vr_array[$value_representation][2] == 0)
 		{
 			// Finding right length
@@ -1448,7 +1449,15 @@ abstract class Nanodicom_Core {
 			$_offset = $this->_tell();
 
 			// Add the pointer to corresponding length
-			$this->_forward($length);
+			$bytes_forwarded = $this->_forward($length);
+			
+			if ($bytes_forwarded != $length)
+			{
+				// Need to rewind
+				$this->_rewind(-1*$length);
+				$length = $bytes_forwarded;
+			}
+			
 			unset($endian, $vr_mode);
 			return array($group, $element, 
 				array('len'	  => $length,
@@ -2127,19 +2136,31 @@ abstract class Nanodicom_Core {
 	 */
 	protected function _forward($offset)
 	{
+		$increment = $offset;
 		$offset = $this->_current_pointer + $offset;
 
 		// Check if after forwarding with offset still within limits of DICOM object
 		if ($offset > $this->_file_length)
 		{
-			$missing_bytes = $offset - $this->_file_length;
-			throw new Nanodicom_Exception('End of file :file has been reached. File size is :filesize, failed to allocate :missing bytes at byte :byte'
-									  , array(':file' => $this->_location, ':filesize' => $this->_file_length, 
-											  ':missing' => $missing_bytes, ':byte' => sprintf('0x%04X',$this->_current_pointer)), 3);
+			if ($this->_oversize_retries > 0)
+			{
+				$missing_bytes = $offset - $this->_file_length;
+				throw new Nanodicom_Exception('End of file :file has been reached. File size is :filesize, failed to allocate :missing bytes at byte :byte'
+										  , array(':file' => $this->_location, ':filesize' => $this->_file_length, 
+												  ':missing' => $missing_bytes, ':byte' => sprintf('0x%04X',$this->_current_pointer)), 3);
+			}
+			else
+			{
+				// Blew up first time
+				$this->warnings[] = 'Retry file overflow while forwarding file pointer';
+				$this->_oversize_retries++;
+				$increment = 0;
+			}	
 		}
 	
 		// Otherwise is fine to add the offest to current_pointer
 		$this->_current_pointer = $offset;
+		return $increment;
 	}
 
 	/**
