@@ -820,6 +820,13 @@ abstract class Nanodicom_Core {
 
 		// Grab the vr
 		list($value_representation, $multiplicity, $name) = $this->_decode_vr($group, $element, $original_vr, 0);
+		
+		if (is_array($new_value))
+		{
+			// Extract vr and value from array
+			$value_representation = $new_value['vr'];
+			$new_value = $new_value['value'];
+		}
 
 		if (self::$vr_array[$value_representation][2] == 0)
 		{
