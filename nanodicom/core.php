@@ -980,6 +980,9 @@ abstract class Nanodicom_Core {
 		// Iterate through the current elements
 		foreach ($this->_dataset as $group => $elements)
 		{	
+			// Sort the elements
+			ksort($elements);
+			
 			// Through groups
 			foreach ($elements as $element => $indexes)
 			{
