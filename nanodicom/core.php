@@ -1782,11 +1782,13 @@ abstract class Nanodicom_Core {
 		}
 		
 		$bytes = 4;
+		$vr_index = ($data['vr'] != $data['_vr'] AND ! empty($data['_vr'])) ? '_vr' : 'vr';
+		
 		if ($vr_mode == self::VR_MODE_EXPLICIT OR $group == self::METADATA_GROUP)
 		{
 			// For Explicit or Metadata Group
-			$buffer .= $data['vr'];
-			if (in_array($data['vr'], self::$vr_explicit_4bytes))
+			$buffer .= $data[$vr_index];
+			if (in_array($data[$vr_index], self::$vr_explicit_4bytes))
 			{
 				$buffer .= chr(0).chr(0);
 			}
@@ -1801,7 +1803,7 @@ abstract class Nanodicom_Core {
 		
 		// Setting the value
 		// TODO: Encode AT properly
-		switch ($data['vr'])
+		switch ($data[$vr_index])
 		{
 			// Decode Attribute Tag
 			case 'AT':
@@ -1845,7 +1847,7 @@ abstract class Nanodicom_Core {
 
 						// Setting the parent VR as OB, OW or OX, so Items know they should
 						// treat value as data not data sets
-						$this->_parent_vr = $data['vr'];
+						$this->_parent_vr = $data[$vr_index];
 
 						// Sort the keys
 						ksort($data['ds']);
@@ -1887,7 +1889,7 @@ abstract class Nanodicom_Core {
 						// The Element has an undefined length. Let's get the rest from the items
 
 						// To let the Item know that value should be treated as Datas Sets
-						$this->_parent_vr = $data['vr'];
+						$this->_parent_vr = $data[$vr_index];
 
 						// Sort the keys
 						ksort($data['ds']);
