@@ -1855,6 +1855,9 @@ abstract class Nanodicom_Core {
 						// Iterate through the current elements
 						foreach ($data['ds'] as $ds_group => $ds_elements)
 						{	
+							// Sort the elements
+							ksort($ds_elements);
+							
 							// Through groups
 							foreach ($ds_elements as $ds_element => $ds_indexes)
 							{
@@ -1897,6 +1900,9 @@ abstract class Nanodicom_Core {
 						// Iterate through the current elements
 						foreach ($data['ds'] as $ds_group => $ds_elements)
 						{	
+							// Sort the elements
+							ksort($ds_elements);
+
 							// Through groups
 							foreach ($ds_elements as $ds_element => $ds_indexes)
 							{
@@ -1932,6 +1938,9 @@ abstract class Nanodicom_Core {
 							// Iterate through the current elements
 							foreach ($data['ds'] as $ds_group => $ds_elements)
 							{	
+								// Sort the elements
+								ksort($ds_elements);
+
 								// Through groups
 								foreach ($ds_elements as $ds_element => $ds_indexes)
 								{
