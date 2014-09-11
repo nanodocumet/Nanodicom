@@ -577,6 +577,29 @@ abstract class Nanodicom_Core {
 	}
 
 	/**
+	 * Public method to delete a value using the group and element values
+	 *
+	 * @param   mixed    either the group as number or hex string
+	 * @param   mixed    either the element as number or hex string
+	 * @return  $this
+	 */
+	public function delete($group, $element)
+	{
+		$group   = is_string($group) ? hexdec($group) : $group;
+		$element = is_string($element) ? hexdec($element) : $element;
+
+		if (isset($this->_dataset[$group][$element]))
+		{
+			unset($this->_dataset[$group][$element]);
+		}
+		
+		// Update the group length if needed
+		$this->_update_group_length($this->_dataset, $group);
+		
+		return $this;
+	}
+
+	/**
 	 * Public static method to get the value from an array. If index does not exist, it returns the default.
 	 *
 	 * @param   array	the array to search
