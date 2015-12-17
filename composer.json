@@ -11,7 +11,7 @@
         }
     ],
     "autoload": {
-        "files": [ "nanodicom.php"]
+        "classmap": [ "nanodicom.php" ]
     },
     "require": {
         "php": ">=5.2.6"
