@@ -1079,7 +1079,7 @@ abstract class Nanodicom_Core {
 	 * @param	mixed
 	 * @return	void
 	 */
-	protected function _dummy($arg1 = NULL, $arg2 = NULL, $arg2 = NULL, $arg3 = NULL, $arg4 = NULL, $arg5 = NULL)
+	protected function _dummy($arg1 = NULL, $arg2 = NULL, $arg3 = NULL, $arg4 = NULL, $arg5 = NULL, $arg6 = NULL)
 	{
 	}
 	
