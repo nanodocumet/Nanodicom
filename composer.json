@@ -1,0 +1,19 @@
+{
+    "name": "nanodocumet/nanodicom",
+    "description": "A PHP DICOM toolkit",
+    "homepage": "http://www.nanodicom.org/",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jorge \"Nano\" Documet",
+            "homepage": "http://www.nanodicom.org/",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "classmap": [ "nanodicom.php" ]
+    },
+    "require": {
+        "php": ">=5.2.6"
+    }
+}
