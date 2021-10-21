@@ -573,6 +573,7 @@ abstract class Nanodicom_Core {
 	 */
 	public function value($group = NULL, $element = NULL, $new_value = NULL, $binary = FALSE)
 	{
+		$this->_parent_vr='';
 		return $this->dataset_value($this->_dataset, $group, $element, $new_value, $binary);
 	}
 
